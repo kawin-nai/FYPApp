@@ -21,9 +21,6 @@ import com.example.happybirthday.databinding.ActivityCameraBinding
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ExecutorService
-//import com.azure.storage.file.share.*
-//import com.azure.android.*
-//import java.io.File
 
 // todo: access the photo taken and upload it to Azure Storage
 // todo: fix version conflicts for jackson-databind and jackson-core
@@ -34,12 +31,6 @@ class CameraActivity : AppCompatActivity() {
 
     private var imageCapture: ImageCapture? = null
     private lateinit var cameraExecutor: ExecutorService
-    private val shareURL = "https://filelisttest.file.core.windows.net/"
-//    private var shareClient: ShareClient = ShareClientBuilder().endpoint(shareURL).
-//        connectionString("DefaultEndpointsProtocol=https;AccountName=filelisttest;AccountKey=cr6aB8V4l1Ogs8XOu36BkVkU1oPhWzDzhbenAuBz71XO/8LFfoUItUFGHA5rfLUkGcHVnpJOrNtP+AStLsXYbg==;EndpointSuffix=core.windows.net").
-//        shareName("app-data").buildClient()
-//    private var fileClient: ShareFileClient = shareClient.getFileClient("test.jpg")
-    private var imageFilePath: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -136,22 +127,15 @@ class CameraActivity : AppCompatActivity() {
                 override fun
                         onImageSaved(output: ImageCapture.OutputFileResults){
                     val msg = "Photo capture succeeded: ${output.savedUri}"
-                    imageFilePath = output.savedUri.toString()
                     Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
                     Log.d(TAG, msg)
 
-                    val tempFilePath = "/storage/emulated/0/Pictures/CameraX-Image/2023-01-06-14-59-33-175.jpg"
-//                    fileClient.uploadFromFile(tempFilePath)
                 }
             }
         )
     }
 
-    private fun uploadPictureToAzureFileStorage() {
-//        val file = File("test.txt")
-//        file.writeText("Hello, world!")
-//        fileClient.uploadFromFile(imageFilePath)
-    }
+
 
     override fun onDestroy() {
         super.onDestroy()
