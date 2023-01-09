@@ -18,6 +18,8 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.happybirthday.databinding.ActivityCameraBinding
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.ktx.storage
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ExecutorService
@@ -31,6 +33,8 @@ class CameraActivity : AppCompatActivity() {
 
     private var imageCapture: ImageCapture? = null
     private lateinit var cameraExecutor: ExecutorService
+    private val storage = Firebase.storage
+    private var storageRef = storage.reference
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
