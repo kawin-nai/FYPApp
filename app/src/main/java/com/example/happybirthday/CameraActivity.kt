@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.ContentValues
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -19,7 +20,9 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.happybirthday.databinding.ActivityCameraBinding
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.ktx.storage
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ExecutorService
@@ -134,6 +137,17 @@ class CameraActivity : AppCompatActivity() {
                     Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
                     Log.d(TAG, msg)
 
+                    // Test upload image
+                    val rootFilePath = "/storage/emulated/0/Pictures/CameraX-Image/"
+//                    val tempFilePath = "/storage/emulated/0/Pictures/CameraX-Image/2023-01-06-14-59-33-175.jpg"
+                    val justTakenFilePath = "$rootFilePath$name.jpg"
+                    val file = Uri.fromFile(File(justTakenFilePath))
+                    val realRef = storageRef.child("application-data/images/${file.lastPathSegment}")
+                    val uploadTask = realRef.putFile(file)
+
+                    uploadTask.addOnFailureListener {
+                        Log.d("Upload failed", it.toString())
+                    }.addOnSuccessListener { Log.d("Upload success", it.toString())}
                 }
             }
         )
