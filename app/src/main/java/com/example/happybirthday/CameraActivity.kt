@@ -1,4 +1,4 @@
-package com.example.fypandroid
+package com.example.happybirthday
 
 import android.Manifest
 import android.content.ContentValues

@@ -1,4 +1,4 @@
-package com.example.fypandroid
+package com.example.happybirthday
 
 class Rates (
     var THB: Double,

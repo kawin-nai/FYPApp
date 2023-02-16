@@ -1,4 +1,4 @@
-package com.example.fypandroid
+package com.example.happybirthday
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4

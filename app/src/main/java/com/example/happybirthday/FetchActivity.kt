@@ -1,4 +1,4 @@
-package com.example.fypandroid
+package com.example.happybirthday
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Button
 import android.widget.TextView
-import com.example.happybirthday.R
 import com.google.gson.Gson
 import java.io.InputStreamReader
 import java.net.URL
