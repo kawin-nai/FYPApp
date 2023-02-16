@@ -1,4 +1,4 @@
-package com.example.happybirthday
+package com.example.fypandroid
 
 import android.Manifest
 import android.content.ContentValues
@@ -20,7 +20,6 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.happybirthday.databinding.ActivityCameraBinding
 import com.google.firebase.ktx.Firebase
-import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.ktx.storage
 import java.io.File
 import java.text.SimpleDateFormat

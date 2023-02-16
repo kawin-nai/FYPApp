@@ -1,4 +1,4 @@
-package com.example.happybirthday
+package com.example.fypandroid
 
 import org.junit.Test
 

@@ -1,4 +1,4 @@
-package com.example.happybirthday
+package com.example.fypandroid
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
@@ -10,6 +10,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.SeekBar
 import android.widget.TextView
+import com.example.happybirthday.R
 
 private const val TAG = "MainActivity"
 

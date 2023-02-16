@@ -8,7 +8,7 @@ android {
     compileSdk 33
 
     defaultConfig {
-        applicationId "com.example.happybirthday"
+        applicationId "com.example.fypandroid"
         minSdk 26
         targetSdk 33
         versionCode 1
