@@ -22,7 +22,9 @@ import com.example.happybirthday.databinding.ActivityCameraBinding
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.ktx.storage
+import okhttp3.*
 import java.io.File
+import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ExecutorService
@@ -39,6 +41,7 @@ class CameraActivity : AppCompatActivity() {
     private val storage = Firebase.storage
     private var storageRef = storage.reference
 
+    private val client = OkHttpClient()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewBinding = ActivityCameraBinding.inflate(layoutInflater)
@@ -134,23 +137,69 @@ class CameraActivity : AppCompatActivity() {
                 override fun
                         onImageSaved(output: ImageCapture.OutputFileResults){
                     val msg = "Photo capture succeeded: ${output.savedUri}"
-                    Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
+//                    Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
                     Log.d(TAG, msg)
 
                     // Test upload image
                     val rootFilePath = "/storage/emulated/0/Pictures/CameraX-Image/"
-//                    val tempFilePath = "/storage/emulated/0/Pictures/CameraX-Image/2023-01-06-14-59-33-175.jpg"
-                    val justTakenFilePath = "$rootFilePath$name.jpg"
+                    val rawImagePath = "$name.jpg"
+                    val justTakenFilePath = "$rootFilePath$rawImagePath"
                     val file = Uri.fromFile(File(justTakenFilePath))
                     val realRef = storageRef.child("application-data/images/${file.lastPathSegment}")
                     val uploadTask = realRef.putFile(file)
 
                     uploadTask.addOnFailureListener {
                         Log.d("Upload failed", it.toString())
-                    }.addOnSuccessListener { Log.d("Upload success", it.toString())}
+                    }.addOnSuccessListener {
+                        Log.d("Upload success", it.toString())
+                        val apiResponse = callApi(rawImagePath)
+                    }
                 }
             }
         )
+    }
+
+    private fun callApi(rawImagePath: String) {
+        val rootApiPath = "https://happybirthdayapi.azurewebsites.net/"
+        val testApiPath = "https://randomuser.me/api/"
+        val failApiPath = "https://asdfasdf.asdfasdf/"
+        val request = Request.Builder()
+            .url("$rootApiPath=$rawImagePath")
+            .build()
+        val testRequest = Request.Builder()
+            .url(testApiPath)
+            .build()
+        val failRequest = Request.Builder()
+            .url(failApiPath)
+            .build()
+
+        val failMsg = "Error: API call failed"
+        val unexpectedCode = "Error: Unexpected code"
+
+        client.newCall(failRequest).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                Log.d("API call failed", e.toString())
+                Toast.makeText(baseContext, failMsg, Toast.LENGTH_SHORT).show()
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                Log.d("API call success", response.toString())
+                response.use {
+                    if (!response.isSuccessful){
+                        Toast.makeText(baseContext, unexpectedCode, Toast.LENGTH_SHORT).show()
+                        throw IOException("Unexpected code $response")
+                    }
+
+                    for ((name, value) in response.headers) {
+                        Log.d("API call success", "$name: $value")
+                    }
+
+                    Log.d("API call success", response.body!!.string())
+                    val intent = Intent(this@CameraActivity, SuccessActivity::class.java)
+                    startActivity(intent)
+                }
+            }
+        }).runCatching { Log.d("API call catch", "Test") }
     }
 
 
