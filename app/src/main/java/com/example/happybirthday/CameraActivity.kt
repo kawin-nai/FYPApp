@@ -176,7 +176,7 @@ class CameraActivity : AppCompatActivity() {
         val failMsg = "Error: API call failed"
         val unexpectedCode = "Error: Unexpected code"
 
-        client.newCall(failRequest).enqueue(object : Callback {
+        client.newCall(testRequest).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 Log.d("API call failed", e.toString())
                 Toast.makeText(baseContext, failMsg, Toast.LENGTH_SHORT).show()
