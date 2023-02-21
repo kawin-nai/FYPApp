@@ -22,6 +22,7 @@ import com.example.happybirthday.databinding.ActivityCameraBinding
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.ktx.storage
+import com.google.firebase.firestore.ktx.firestore
 import okhttp3.*
 import java.io.File
 import java.io.IOException
@@ -40,6 +41,7 @@ class CameraActivity : AppCompatActivity() {
     private lateinit var cameraExecutor: ExecutorService
     private val storage = Firebase.storage
     private var storageRef = storage.reference
+    private val db = Firebase.firestore
 
     private val client = OkHttpClient()
     override fun onCreate(savedInstanceState: Bundle?) {
