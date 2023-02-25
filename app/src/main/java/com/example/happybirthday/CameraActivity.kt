@@ -11,6 +11,7 @@ import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
@@ -62,6 +63,7 @@ class CameraActivity : AppCompatActivity() {
         }
 //        uploadPictureToAzureFileStorage()
         viewBinding.shutterButton.setOnClickListener { takePhoto() }
+        viewBinding.apiButton.setOnClickListener { callApi(viewBinding.apiText.text.toString()) }
     }
 
     private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
@@ -108,20 +110,26 @@ class CameraActivity : AppCompatActivity() {
         val imageCapture = imageCapture ?: return
 
         // Create time stamped name and MediaStore entry.
-        val name = SimpleDateFormat(FILENAME_FORMAT, Locale.US)
-            .format(System.currentTimeMillis())
+//        val name = SimpleDateFormat(FILENAME_FORMAT, Locale.US)
+//            .format(System.currentTimeMillis())
+        val name = "input"
 
         val contentValues = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, name)
             put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
-            if(Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
-                put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/CameraX-Image")
-            }
+            put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/FaceApp")
         }
+
+        // If the image "input.jpg" already exists, delete it
+        val resolver = contentResolver
+        val uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+        val selection = MediaStore.MediaColumns.DISPLAY_NAME + " = ?"
+        val selectionArgs = arrayOf("input.jpg")
+        resolver.delete(uri, selection, selectionArgs)
 
         // Create output options object which contains file + metadata
         val outputOptions = ImageCapture.OutputFileOptions
-            .Builder(contentResolver,
+            .Builder(resolver,
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                 contentValues)
             .build()
@@ -143,7 +151,8 @@ class CameraActivity : AppCompatActivity() {
                     Log.d(TAG, msg)
 
                     // Test upload image
-                    val rootFilePath = "/storage/emulated/0/Pictures/CameraX-Image/"
+                    // Root file path of the saved image
+                    val rootFilePath = "/storage/emulated/0/Pictures/FaceApp/"
                     val rawImagePath = "$name.jpg"
                     val justTakenFilePath = "$rootFilePath$rawImagePath"
                     val file = Uri.fromFile(File(justTakenFilePath))
@@ -154,22 +163,45 @@ class CameraActivity : AppCompatActivity() {
                         Log.d("Upload failed", it.toString())
                     }.addOnSuccessListener {
                         Log.d("Upload success", it.toString())
-                        val apiResponse = callApi(rawImagePath)
+                        realRef.downloadUrl.addOnSuccessListener { uri ->
+                            Log.d("Download URL", uri.toString())
+                            uploadToFirestore(uri.toString()) }
+                        val apiResponse = callApi("https://reqres.in/api/users/2")
                     }
+
+
                 }
             }
         )
     }
 
-    private fun callApi(rawImagePath: String) {
-        val rootApiPath = "https://happybirthdayapi.azurewebsites.net/"
-        val testApiPath = "https://randomuser.me/api/"
-        val failApiPath = "https://asdfasdf.asdfasdf/"
+    private fun uploadToFirestore(downloadedURL: String) {
+        Log.d("Upload to Firestore", downloadedURL)
+        val data = hashMapOf(
+            "image_name" to "input.jpg",
+            "image_url" to downloadedURL
+        )
+        db.collection("input_faces")
+            .document("input")
+            .set(data)
+            .addOnSuccessListener {
+                Log.d("Uploaded to Firestore", "DocumentSnapshot added")
+            }
+            .addOnFailureListener { e ->
+                Log.w("Firestore upload error", "Error adding document", e)
+            }
+    }
+
+    private fun callApi(apiUrl: String) {
+        val rootApiPath = "http://127.0.0.1/verifyfromdb"
+        val successApiPath = "https://reqres.in/api/users/2"
+        val invalidApiPath = "https://asdfasdf.asdfasdf/"
+        val failApiPath = "https://reqres.in/api/users/23"
         val request = Request.Builder()
-            .url("$rootApiPath=$rawImagePath")
+            .url(apiUrl)
             .build()
         val testRequest = Request.Builder()
-            .url(testApiPath)
+            .url(successApiPath)
             .build()
         val failRequest = Request.Builder()
             .url(failApiPath)
@@ -178,32 +210,40 @@ class CameraActivity : AppCompatActivity() {
         val failMsg = "Error: API call failed"
         val unexpectedCode = "Error: Unexpected code"
 
-        client.newCall(testRequest).enqueue(object : Callback {
+        client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                Log.d("API call failed", e.toString())
-                Toast.makeText(baseContext, failMsg, Toast.LENGTH_SHORT).show()
+                Log.d("API call invalid", e.toString())
+                makeToast(failMsg)
+//                Toast.makeText(baseContext, failMsg, Toast.LENGTH_SHORT).show()
             }
 
             override fun onResponse(call: Call, response: Response) {
-                Log.d("API call success", response.toString())
+                Log.d("API call valid", response.toString())
                 response.use {
                     if (!response.isSuccessful){
-                        Toast.makeText(baseContext, unexpectedCode, Toast.LENGTH_SHORT).show()
+                        Log.d("API call failed", "$response")
+                        makeToast(unexpectedCode)
+//                        Toast.makeText(baseContext, unexpectedCode, Toast.LENGTH_SHORT).show()
                         throw IOException("Unexpected code $response")
                     }
 
                     for ((name, value) in response.headers) {
-                        Log.d("API call success", "$name: $value")
+                        Log.d("API headers detail", "$name: $value")
                     }
 
-                    Log.d("API call success", response.body!!.string())
+                    Log.d("API body", response.body!!.string())
                     val intent = Intent(this@CameraActivity, SuccessActivity::class.java)
                     startActivity(intent)
                 }
             }
-        }).runCatching { Log.d("API call catch", "Test") }
+        })
     }
 
+    private fun makeToast(toastMsg: String) {
+        runOnUiThread {
+            Toast.makeText(baseContext, toastMsg, Toast.LENGTH_SHORT).show()
+        }
+    }
 
 
     override fun onDestroy() {
