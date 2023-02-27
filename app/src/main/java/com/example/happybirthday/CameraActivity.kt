@@ -30,8 +30,6 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ExecutorService
 
-// todo: access the photo taken and upload it to Azure Storage
-// todo: fix version conflicts for jackson-databind and jackson-core
 // todo: alternatively, use on-device ML to get embeddings and call the API with the embeddings
 
 class CameraActivity : AppCompatActivity() {
@@ -66,7 +64,8 @@ class CameraActivity : AppCompatActivity() {
         viewBinding.apiButton.setOnClickListener { callApi(viewBinding.apiText.text.toString()) }
         // Select back camera as a default
         viewBinding.switchBtn.setOnClickListener {
-            viewBinding.loadingPanel.visibility = View.VISIBLE
+//            viewBinding.loadingPanel.visibility = View.VISIBLE
+//            turnOnPreview()
             if (!allPermissionsGranted())
                 ActivityCompat.requestPermissions(
                     this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
@@ -141,8 +140,8 @@ class CameraActivity : AppCompatActivity() {
 
     private fun takePhoto () {
         // Turn off camera preview
-        viewBinding.loadingPanel.visibility = View.VISIBLE
-        viewBinding.viewFinder.visibility = View.GONE
+        turnOffPreview()
+//        viewBinding.loadingPanel.visibility = View.VISIBLE
         // Get a stable reference of the modifiable image capture use case
         val imageCapture = imageCapture ?: return
 
@@ -178,6 +177,8 @@ class CameraActivity : AppCompatActivity() {
             object : ImageCapture.OnImageSavedCallback {
                 override fun onError(exc: ImageCaptureException) {
                     Log.e(TAG, "Photo capture failed: ${exc.message}", exc)
+//                    viewBinding.loadingPanel.visibility = View.GONE
+                    turnOnPreview()
                 }
 
                 override fun
@@ -202,16 +203,16 @@ class CameraActivity : AppCompatActivity() {
                         realRef.downloadUrl.addOnSuccessListener { uri ->
                             Log.d("Download URL", uri.toString())
                             uploadToFirestore(uri.toString()) }
-                        val apiResponse = callApi("https://reqres.in/api/users/2")
+                        val apiResponse = callApi("https://reqres.in/api/users/2/")
                     }
-
-
+//                    viewBinding.loadingPanel.visibility = View.GONE
+                    turnOnPreview()
                 }
             }
         )
         // Restore camera preview
-        viewBinding.loadingPanel.visibility = View.GONE
-        viewBinding.viewFinder.visibility = View.VISIBLE
+
+//        turnOnPreview()
     }
 
     private fun uploadToFirestore(downloadedURL: String) {
@@ -282,6 +283,16 @@ class CameraActivity : AppCompatActivity() {
         runOnUiThread {
             Toast.makeText(baseContext, toastMsg, Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun turnOnPreview() {
+        viewBinding.loadingPanel.visibility = View.GONE
+        viewBinding.viewFinder.visibility = View.VISIBLE
+    }
+
+    private fun turnOffPreview() {
+        viewBinding.loadingPanel.visibility = View.VISIBLE
+        viewBinding.viewFinder.visibility = View.INVISIBLE
     }
 
 
