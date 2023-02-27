@@ -35,12 +35,12 @@ class MainActivity : AppCompatActivity() {
         seekBarPercent.text = "0%"
         total.text = "$0.00"
 
-        nextButton.setOnClickListener {
-            Log.d(TAG, "Next Button clicked")
-            // Add intent to go to next activity
-            val intent = Intent(this, FetchActivity::class.java)
-            startActivity(intent)
-        }
+//        nextButton.setOnClickListener {
+//            Log.d(TAG, "Next Button clicked")
+//            // Add intent to go to next activity
+//            val intent = Intent(this, FetchActivity::class.java)
+//            startActivity(intent)
+//        }
         cameraButton.setOnClickListener {
             Log.d(TAG, "Camera Button clicked")
             // Add intent to go to camera activity

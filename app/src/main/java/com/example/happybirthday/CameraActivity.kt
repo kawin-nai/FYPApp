@@ -10,12 +10,11 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
+import android.view.MotionEvent
+import android.view.View
 import android.widget.Toast
 import androidx.annotation.RequiresApi
-import androidx.camera.core.CameraSelector
-import androidx.camera.core.ImageCapture
-import androidx.camera.core.ImageCaptureException
-import androidx.camera.core.Preview
+import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -45,6 +44,7 @@ class CameraActivity : AppCompatActivity() {
     private val db = Firebase.firestore
 
     private val client = OkHttpClient()
+    private var cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewBinding = ActivityCameraBinding.inflate(layoutInflater)
@@ -61,9 +61,23 @@ class CameraActivity : AppCompatActivity() {
             ActivityCompat.requestPermissions(
                 this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
         }
-//        uploadPictureToAzureFileStorage()
+
         viewBinding.shutterButton.setOnClickListener { takePhoto() }
         viewBinding.apiButton.setOnClickListener { callApi(viewBinding.apiText.text.toString()) }
+        // Select back camera as a default
+        viewBinding.switchBtn.setOnClickListener {
+            viewBinding.loadingPanel.visibility = View.VISIBLE
+            if (!allPermissionsGranted())
+                ActivityCompat.requestPermissions(
+                    this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
+            cameraSelector = if (cameraSelector == CameraSelector.DEFAULT_BACK_CAMERA) {
+                CameraSelector.DEFAULT_FRONT_CAMERA
+            } else {
+                CameraSelector.DEFAULT_BACK_CAMERA
+            }
+            startCamera()
+        }
+
     }
 
     private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
@@ -85,18 +99,38 @@ class CameraActivity : AppCompatActivity() {
                     it.setSurfaceProvider(viewBinding.viewFinder.surfaceProvider)
                 }
 
-            imageCapture = ImageCapture.Builder().build()
 
-            // Select back camera as a default
-            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+
+
+            imageCapture = ImageCapture.Builder().build()
 
             try {
                 // Unbind use cases before rebinding
                 cameraProvider.unbindAll()
 
                 // Bind use cases to camera
-                cameraProvider.bindToLifecycle(
+                val camera = cameraProvider.bindToLifecycle(
                     this, cameraSelector, preview, imageCapture)
+
+                // Get the CameraControl instance from camera
+                val cameraControl = camera.cameraControl
+
+                val viewFinder = viewBinding.viewFinder
+
+                // Add touch to focus listener
+                viewFinder.setOnTouchListener setOnTouchListener@{ view: View, motionEvent: MotionEvent ->
+                    when (motionEvent.action) {
+                        MotionEvent.ACTION_DOWN -> return@setOnTouchListener true
+                        MotionEvent.ACTION_UP -> {
+                            val factory = viewFinder.meteringPointFactory
+                            val point = factory.createPoint(motionEvent.x, motionEvent.y)
+                            val action = FocusMeteringAction.Builder(point).build()
+                            cameraControl.startFocusAndMetering(action)
+                            return@setOnTouchListener true
+                        }
+                        else -> return@setOnTouchListener false
+                    }
+                }
 
             } catch(exc: Exception) {
                 Log.e(TAG, "Use case binding failed", exc)
@@ -106,6 +140,9 @@ class CameraActivity : AppCompatActivity() {
     }
 
     private fun takePhoto () {
+        // Turn off camera preview
+        viewBinding.loadingPanel.visibility = View.VISIBLE
+        viewBinding.viewFinder.visibility = View.GONE
         // Get a stable reference of the modifiable image capture use case
         val imageCapture = imageCapture ?: return
 
@@ -134,8 +171,7 @@ class CameraActivity : AppCompatActivity() {
                 contentValues)
             .build()
 
-        // Set up image capture listener, which is triggered after photo has
-        // been taken
+        // Set up image capture listener, which is triggered after photo has been taken
         imageCapture.takePicture(
             outputOptions,
             ContextCompat.getMainExecutor(this),
@@ -173,6 +209,9 @@ class CameraActivity : AppCompatActivity() {
                 }
             }
         )
+        // Restore camera preview
+        viewBinding.loadingPanel.visibility = View.GONE
+        viewBinding.viewFinder.visibility = View.VISIBLE
     }
 
     private fun uploadToFirestore(downloadedURL: String) {
@@ -258,15 +297,7 @@ class CameraActivity : AppCompatActivity() {
         private val REQUIRED_PERMISSIONS =
             mutableListOf (
                 Manifest.permission.CAMERA,
-//                Manifest.permission.READ_EXTERNAL_STORAGE,
-            ).apply {
-                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
-                    add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                }
-//                else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-//                    add(Manifest.permission.MANAGE_EXTERNAL_STORAGE)
-//                }
-            }.toTypedArray()
+            ).toTypedArray()
     }
 
     override fun onRequestPermissionsResult(
