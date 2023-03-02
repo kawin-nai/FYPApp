@@ -12,6 +12,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="32dp"
         android:text="Call"
+        android:backgroundTint="@android:color/black"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/shutterButton"
         app:layout_constraintHorizontal_bias="0.378"
@@ -42,6 +43,16 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Switch"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="@+id/viewFinder"
+        app:layout_constraintTop_toTopOf="@+id/viewFinder" />
+
+    <ImageView
+        android:id="@+id/switch_camera"
+        android:layout_width="38dp"
+        android:layout_height="35dp"
+        android:contentDescription="Switch Camera Button"
+        android:src="@drawable/ic_cycle_svgrepo_com"
         app:layout_constraintEnd_toEndOf="@+id/viewFinder"
         app:layout_constraintTop_toTopOf="@+id/viewFinder" />
 

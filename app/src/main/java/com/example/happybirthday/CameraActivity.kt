@@ -63,7 +63,7 @@ class CameraActivity : AppCompatActivity() {
         viewBinding.shutterButton.setOnClickListener { takePhoto() }
         viewBinding.apiButton.setOnClickListener { callApi(viewBinding.apiText.text.toString()) }
         // Select back camera as a default
-        viewBinding.switchBtn.setOnClickListener {
+        viewBinding.switchCamera.setOnClickListener {
 //            viewBinding.loadingPanel.visibility = View.VISIBLE
 //            turnOnPreview()
             if (!allPermissionsGranted())
@@ -203,16 +203,14 @@ class CameraActivity : AppCompatActivity() {
                         realRef.downloadUrl.addOnSuccessListener { uri ->
                             Log.d("Download URL", uri.toString())
                             uploadToFirestore(uri.toString()) }
-                        val apiResponse = callApi("https://reqres.in/api/users/2/")
+//                        run the callApi function and then turn on preview
+
+                        callApi("https://reqres.in/api/users/2/")
                     }
-//                    viewBinding.loadingPanel.visibility = View.GONE
                     turnOnPreview()
                 }
             }
         )
-        // Restore camera preview
-
-//        turnOnPreview()
     }
 
     private fun uploadToFirestore(downloadedURL: String) {
@@ -288,11 +286,13 @@ class CameraActivity : AppCompatActivity() {
     private fun turnOnPreview() {
         viewBinding.loadingPanel.visibility = View.GONE
         viewBinding.viewFinder.visibility = View.VISIBLE
+        viewBinding.shutterButton.isEnabled = true
     }
 
     private fun turnOffPreview() {
         viewBinding.loadingPanel.visibility = View.VISIBLE
         viewBinding.viewFinder.visibility = View.INVISIBLE
+        viewBinding.shutterButton.isEnabled = false
     }
 
 
