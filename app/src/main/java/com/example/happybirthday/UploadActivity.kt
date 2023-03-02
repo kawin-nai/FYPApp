@@ -2,6 +2,7 @@ package com.example.happybirthday
 
 import android.Manifest
 import android.content.ContentValues
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
@@ -21,10 +22,17 @@ import com.example.happybirthday.databinding.ActivityUploadBinding
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
-import okhttp3.OkHttpClient
+import okhttp3.*
 import java.io.File
+import java.io.IOException
 import java.util.concurrent.ExecutorService
 
+
+// TODO : Add actual API link
+// TODO : Verify name before submission
+// TODO : Add loading screen
+// TODO : Add face detection before upload
+// TODO : Add multiple stages of face upload
 class UploadActivity : AppCompatActivity() {
     private lateinit var viewBinding: ActivityUploadBinding
 
@@ -154,13 +162,12 @@ class UploadActivity : AppCompatActivity() {
                 override fun onError(exc: ImageCaptureException) {
                     Log.e(UploadActivity.TAG, "Photo capture failed: ${exc.message}", exc)
 //                    viewBinding.loadingPanel.visibility = View.GONE
-                    turnOnPreview()
+//                    turnOnPreview()
                 }
 
                 override fun
                         onImageSaved(output: ImageCapture.OutputFileResults){
                     val msg = "Photo capture succeeded: ${output.savedUri}"
-//                    Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
                     Log.d(UploadActivity.TAG, msg)
 
                     // Test upload image
@@ -177,16 +184,75 @@ class UploadActivity : AppCompatActivity() {
                     }.addOnSuccessListener {
                         Log.d("Upload success", it.toString())
                         realRef.downloadUrl.addOnSuccessListener { uri ->
-                            Log.d("Download URL", uri.toString())
-                            uploadToFirestore(uri.toString()) }
+                            Log.d("Upload URL", uri.toString())
+                            uploadToFirestore(rawImagePath, uri.toString()) }
 //                        run the callApi function and then turn on preview
 
-                        callApi("https://reqres.in/api/users/2")
+//                        callApi("https://reqres.in/api/users/$rawImagePath")
                     }
-                    turnOnPreview()
+//                    turnOnPreview()
                 }
             }
         )
+    }
+
+    private fun uploadToFirestore(fileName: String, uploadedURL: String) {
+        Log.d("Upload to Firestore", uploadedURL)
+        val data = hashMapOf(
+            "image_name" to "input.jpg",
+            "image_url" to fileName
+        )
+        db.collection("upload_faces")
+            .document("upload")
+            .set(data)
+            .addOnSuccessListener {
+                Log.d("Uploaded to Firestore", "DocumentSnapshot added")
+            }
+            .addOnFailureListener { e ->
+                Log.w("Firestore upload error", "Error adding document", e)
+            }
+    }
+
+    private fun callApi(apiUrl: String) {
+        val request = Request.Builder()
+            .url(apiUrl)
+            .build()
+
+        val failMsg = "Error: API call failed"
+        val unexpectedCode = "Error: Unexpected code"
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                Log.d("API call invalid", e.toString())
+                makeToast(failMsg)
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                Log.d("API call valid", response.toString())
+                response.use {
+                    if (!response.isSuccessful){
+                        Log.d("API call failed", "$response")
+                        makeToast(unexpectedCode)
+                        throw IOException("Unexpected code $response")
+                    }
+
+                    for ((name, value) in response.headers) {
+                        Log.d("API headers detail", "$name: $value")
+                    }
+                    val responseBody = response.body!!.string()
+                    Log.d("API body", responseBody)
+                    val intent = Intent(this@UploadActivity, SuccessActivity::class.java)
+                    intent.putExtra("apiResponseBody", responseBody)
+                    startActivity(intent)
+                }
+            }
+        })
+    }
+
+    private fun makeToast(toastMsg: String) {
+        runOnUiThread {
+            Toast.makeText(baseContext, toastMsg, Toast.LENGTH_SHORT).show()
+        }
     }
 
     override fun onDestroy() {
