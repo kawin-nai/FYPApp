@@ -140,9 +140,9 @@ class UploadActivity : AppCompatActivity() {
         val rawName = viewBinding.personName.text.toString()
         Log.d("Name", "Name: $rawName")
         val name = rawName.replace(" ", "_")
-        Log.d("Name + Current Time", "Name: $name")
         val currentTime = System.currentTimeMillis()
-        val imageName = "$name$currentTime"
+        val imageName = name +"_" + "$currentTime"
+        Log.d("Name + Current Time", "Name: $imageName")
 
         val contentValues = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, imageName)
