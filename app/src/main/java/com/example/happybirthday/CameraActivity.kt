@@ -205,7 +205,7 @@ class CameraActivity : AppCompatActivity() {
                             uploadToFirestore(uri.toString()) }
 //                        run the callApi function and then turn on preview
 
-                        callApi("https://reqres.in/api/users/2/")
+                        callApi("https://reqres.in/api/users/2")
                     }
                     turnOnPreview()
                 }
@@ -268,9 +268,10 @@ class CameraActivity : AppCompatActivity() {
                     for ((name, value) in response.headers) {
                         Log.d("API headers detail", "$name: $value")
                     }
-
-                    Log.d("API body", response.body!!.string())
+                    val responseBody = response.body!!.string()
+                    Log.d("API body", responseBody)
                     val intent = Intent(this@CameraActivity, SuccessActivity::class.java)
+                    intent.putExtra("apiResponseBody", responseBody)
                     startActivity(intent)
                 }
             }
