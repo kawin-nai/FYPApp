@@ -30,7 +30,7 @@ import java.util.concurrent.ExecutorService
 
 // TODO : Add actual API link
 // TODO : Verify name before submission
-// TODO : Add loading screen
+// TODO : Add loading screen (turn preview on/off)
 // TODO : Add face detection before upload
 // TODO : Add multiple stages of face upload
 class UploadActivity : AppCompatActivity() {
@@ -199,8 +199,8 @@ class UploadActivity : AppCompatActivity() {
     private fun uploadToFirestore(fileName: String, uploadedURL: String) {
         Log.d("Upload to Firestore", uploadedURL)
         val data = hashMapOf(
-            "image_name" to "input.jpg",
-            "image_url" to fileName
+            "image_name" to fileName,
+            "image_url" to uploadedURL,
         )
         db.collection("upload_faces")
             .document("upload")
