@@ -138,8 +138,11 @@ class UploadActivity : AppCompatActivity() {
 //        val name = SimpleDateFormat(FILENAME_FORMAT, Locale.US)
 //            .format(System.currentTimeMillis())
         val rawName = viewBinding.personName.text.toString()
+        Log.d("Name", "Name: $rawName")
         val name = rawName.replace(" ", "_")
-        val imageName = "$name${System.currentTimeMillis()}"
+        Log.d("Name + Current Time", "Name: $name")
+        val currentTime = System.currentTimeMillis()
+        val imageName = "$name$currentTime"
 
         val contentValues = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, imageName)
@@ -173,7 +176,7 @@ class UploadActivity : AppCompatActivity() {
                     // Test upload image
                     // Root file path of the saved image
                     val rootFilePath = "/storage/emulated/0/Pictures/FaceApp/"
-                    val rawImagePath = "$name.jpg"
+                    val rawImagePath = "$imageName.jpg"
                     val justTakenFilePath = "$rootFilePath$rawImagePath"
                     val file = Uri.fromFile(File(justTakenFilePath))
                     val realRef = storageRef.child("application-data/upload_faces/${file.lastPathSegment}")
@@ -183,6 +186,7 @@ class UploadActivity : AppCompatActivity() {
                         Log.d("Upload failed", it.toString())
                     }.addOnSuccessListener {
                         Log.d("Upload success", it.toString())
+                        makeToast("Upload success")
                         realRef.downloadUrl.addOnSuccessListener { uri ->
                             Log.d("Upload URL", uri.toString())
                             uploadToFirestore(rawImagePath, uri.toString()) }

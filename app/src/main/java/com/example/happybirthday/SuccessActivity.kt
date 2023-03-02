@@ -20,5 +20,9 @@ class SuccessActivity : AppCompatActivity() {
         }
         val apiResponseBody = intent.getStringExtra("apiResponseBody")
         binding.apiResponse.text = apiResponseBody
+        binding.uploadButton.setOnClickListener {
+            val intent = Intent(this, UploadActivity::class.java)
+            startActivity(intent)
+        }
     }
 }
