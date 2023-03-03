@@ -22,7 +22,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.HappyBirthday"
-        tools:targetApi="31">
+        android:hardwareAccelerated="true"
+        android:enableOnBackInvokedCallback="true"
+        >
         <activity
             android:name=".UploadActivity"
             android:exported="false" />

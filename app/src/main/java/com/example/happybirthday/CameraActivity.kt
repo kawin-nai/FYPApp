@@ -142,13 +142,11 @@ class CameraActivity : AppCompatActivity() {
     private fun takePhoto () {
         // Turn off camera preview
         turnOffPreview()
-//        viewBinding.loadingPanel.visibility = View.VISIBLE
+
         // Get a stable reference of the modifiable image capture use case
         val imageCapture = imageCapture ?: return
 
         // Create time stamped name and MediaStore entry.
-//        val name = SimpleDateFormat(FILENAME_FORMAT, Locale.US)
-//            .format(System.currentTimeMillis())
         val name = "input"
 
         val contentValues = ContentValues().apply {
@@ -157,12 +155,7 @@ class CameraActivity : AppCompatActivity() {
             put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/FaceApp")
         }
 
-        // If the image "input.jpg" already exists, delete it
         val resolver = contentResolver
-        val uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-        val selection = MediaStore.MediaColumns.DISPLAY_NAME + " = ?"
-        val selectionArgs = arrayOf("input.jpg")
-        resolver.delete(uri, selection, selectionArgs)
 
         // Create output options object which contains file + metadata
         val outputOptions = ImageCapture.OutputFileOptions
@@ -178,7 +171,6 @@ class CameraActivity : AppCompatActivity() {
             object : ImageCapture.OnImageSavedCallback {
                 override fun onError(exc: ImageCaptureException) {
                     Log.e(TAG, "Photo capture failed: ${exc.message}", exc)
-//                    viewBinding.loadingPanel.visibility = View.GONE
                     turnOnPreview()
                 }
 
@@ -208,6 +200,11 @@ class CameraActivity : AppCompatActivity() {
 
                         callApi("https://reqres.in/api/users/2")
                     }
+                    val uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+                    val selection = MediaStore.MediaColumns.DISPLAY_NAME + " = ?"
+                    val selectionArgs = arrayOf("input.jpg")
+                    resolver.delete(uri, selection, selectionArgs)
+                    Log.d("Deleted", "Deleted the input.jpg from the gallery")
                     turnOnPreview()
                 }
             }
