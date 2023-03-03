@@ -121,7 +121,7 @@ class UploadActivity : AppCompatActivity() {
                 }
 
             } catch(exc: Exception) {
-                Log.e(UploadActivity.TAG, "Use case binding failed", exc)
+                Log.e(TAG, "Use case binding failed", exc)
             }
 
         }, ContextCompat.getMainExecutor(this))
@@ -130,15 +130,11 @@ class UploadActivity : AppCompatActivity() {
     private fun takePhoto () {
         // Turn off camera preview
 //        turnOffPreview()
-//        viewBinding.loadingPanel.visibility = View.VISIBLE
         // Get a stable reference of the modifiable image capture use case
         val imageCapture = imageCapture ?: return
 
         // Create time stamped name and MediaStore entry.
-//        val name = SimpleDateFormat(FILENAME_FORMAT, Locale.US)
-//            .format(System.currentTimeMillis())
         val rawName = viewBinding.personName.text.toString()
-        Log.d("Name", "Name: $rawName")
         val name = rawName.replace(" ", "_")
         val currentTime = System.currentTimeMillis()
         val imageName = name + "_" + "$currentTime"
@@ -150,9 +146,11 @@ class UploadActivity : AppCompatActivity() {
             put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/FaceApp")
         }
 
+        val resolver = contentResolver
+
         // Create output options object which contains file + metadata
         val outputOptions = ImageCapture.OutputFileOptions
-            .Builder(contentResolver,
+            .Builder(resolver,
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                 contentValues)
             .build()
@@ -165,7 +163,7 @@ class UploadActivity : AppCompatActivity() {
             ContextCompat.getMainExecutor(this),
             object : ImageCapture.OnImageSavedCallback {
                 override fun onError(exc: ImageCaptureException) {
-                    Log.e(UploadActivity.TAG, "Photo capture failed: ${exc.message}", exc)
+                    Log.e(TAG, "Photo capture failed: ${exc.message}", exc)
 //                    viewBinding.loadingPanel.visibility = View.GONE
 //                    turnOnPreview()
                 }
@@ -173,7 +171,7 @@ class UploadActivity : AppCompatActivity() {
                 override fun
                         onImageSaved(output: ImageCapture.OutputFileResults){
                     val msg = "Photo capture succeeded: ${output.savedUri}"
-                    Log.d(UploadActivity.TAG, msg)
+                    Log.d(TAG, msg)
 
                     // Test upload image
                     // Root file path of the saved image
@@ -196,6 +194,11 @@ class UploadActivity : AppCompatActivity() {
 
 //                        callApi("https://reqres.in/api/users/$rawImagePath")
                     }
+                    val uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+                    val selection = MediaStore.MediaColumns.DISPLAY_NAME + " = ?"
+                    val selectionArgs = arrayOf(rawImagePath)
+                    resolver.delete(uri, selection, selectionArgs)
+                    Log.d("Deleted", "Deleted $rawImagePath from the gallery")
 //                    turnOnPreview()
                 }
             }

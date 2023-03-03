@@ -204,7 +204,7 @@ class CameraActivity : AppCompatActivity() {
                     val selection = MediaStore.MediaColumns.DISPLAY_NAME + " = ?"
                     val selectionArgs = arrayOf("input.jpg")
                     resolver.delete(uri, selection, selectionArgs)
-                    Log.d("Deleted", "Deleted the input.jpg from the gallery")
+                    Log.d("Deleted", "Deleted input.jpg from the gallery")
                     turnOnPreview()
                 }
             }
