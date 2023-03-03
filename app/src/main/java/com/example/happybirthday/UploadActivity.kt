@@ -5,7 +5,6 @@ import android.content.ContentValues
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.MediaStore
@@ -14,27 +13,28 @@ import android.util.Size
 import android.view.MotionEvent
 import android.view.View
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.happybirthday.databinding.ActivityCameraBinding
-import com.google.firebase.ktx.Firebase
-import com.google.firebase.storage.StorageReference
-import com.google.firebase.storage.ktx.storage
+import com.example.happybirthday.databinding.ActivityUploadBinding
 import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.ktx.storage
 import okhttp3.*
 import java.io.File
 import java.io.IOException
-import java.text.SimpleDateFormat
-import java.util.*
 import java.util.concurrent.ExecutorService
 
-// todo: alternatively, use on-device ML to get embeddings and call the API with the embeddings
 
-class CameraActivity : AppCompatActivity() {
-    private lateinit var viewBinding: ActivityCameraBinding
+// TODO : Add actual API link
+// TODO : Verify name before submission
+// TODO : Add loading screen (turn preview on/off)
+// TODO : Add face detection before upload
+// TODO : Add multiple stages of face upload
+class UploadActivity : AppCompatActivity() {
+    private lateinit var viewBinding: ActivityUploadBinding
 
     private var imageCapture: ImageCapture? = null
     private lateinit var cameraExecutor: ExecutorService
@@ -44,30 +44,26 @@ class CameraActivity : AppCompatActivity() {
 
     private val client = OkHttpClient()
     private var cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        viewBinding = ActivityCameraBinding.inflate(layoutInflater)
+        viewBinding = ActivityUploadBinding.inflate(layoutInflater)
         setContentView(viewBinding.root)
 
-        viewBinding.homeButton.setOnClickListener {
-            Log.i(TAG, "Home Button clicked")
-            val intent = Intent(this, MainActivity::class.java)
-            startActivity(intent)
-        }
         if (allPermissionsGranted()){
             startCamera()
         } else {
             ActivityCompat.requestPermissions(
-                this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
+                this, UploadActivity.REQUIRED_PERMISSIONS, UploadActivity.REQUEST_CODE_PERMISSIONS
+            )
         }
-
-        viewBinding.shutterButton.setOnClickListener { takePhoto() }
-        viewBinding.apiButton.setOnClickListener { callApi(viewBinding.apiText.text.toString()) }
-        // Select back camera as a default
         viewBinding.switchCamera.setOnClickListener {
             if (!allPermissionsGranted())
                 ActivityCompat.requestPermissions(
-                    this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
+                    this,
+                    UploadActivity.REQUIRED_PERMISSIONS,
+                    UploadActivity.REQUEST_CODE_PERMISSIONS
+                )
             cameraSelector = if (cameraSelector == CameraSelector.DEFAULT_BACK_CAMERA) {
                 CameraSelector.DEFAULT_FRONT_CAMERA
             } else {
@@ -75,12 +71,7 @@ class CameraActivity : AppCompatActivity() {
             }
             startCamera()
         }
-
-    }
-
-    private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
-        ContextCompat.checkSelfPermission(
-            baseContext, it) == PackageManager.PERMISSION_GRANTED
+        viewBinding.shutterButton.setOnClickListener { takePhoto() }
     }
 
     private fun startCamera () {
@@ -96,9 +87,6 @@ class CameraActivity : AppCompatActivity() {
                 .also {
                     it.setSurfaceProvider(viewBinding.viewFinder.surfaceProvider)
                 }
-
-
-
 
             imageCapture = ImageCapture.Builder().setTargetResolution(Size(720, 960)).build()
 
@@ -140,15 +128,18 @@ class CameraActivity : AppCompatActivity() {
     private fun takePhoto () {
         // Turn off camera preview
         turnOffPreview()
-
         // Get a stable reference of the modifiable image capture use case
         val imageCapture = imageCapture ?: return
 
         // Create time stamped name and MediaStore entry.
-        val name = "input"
+        val rawName = viewBinding.personName.text.toString()
+        val name = rawName.replace(" ", "_")
+        val currentTime = System.currentTimeMillis()
+        val imageName = name + "_" + "$currentTime"
+        Log.d("Name + Current Time", "Name: $imageName")
 
         val contentValues = ContentValues().apply {
-            put(MediaStore.MediaColumns.DISPLAY_NAME, name)
+            put(MediaStore.MediaColumns.DISPLAY_NAME, imageName)
             put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
             put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/FaceApp")
         }
@@ -161,6 +152,8 @@ class CameraActivity : AppCompatActivity() {
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                 contentValues)
             .build()
+
+
 
         // Set up image capture listener, which is triggered after photo has been taken
         imageCapture.takePicture(
@@ -175,48 +168,48 @@ class CameraActivity : AppCompatActivity() {
                 override fun
                         onImageSaved(output: ImageCapture.OutputFileResults){
                     val msg = "Photo capture succeeded: ${output.savedUri}"
-//                    Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
                     Log.d(TAG, msg)
 
                     // Test upload image
                     // Root file path of the saved image
                     val rootFilePath = "/storage/emulated/0/Pictures/FaceApp/"
-                    val rawImagePath = "$name.jpg"
+                    val rawImagePath = "$imageName.jpg"
                     val justTakenFilePath = "$rootFilePath$rawImagePath"
                     val file = Uri.fromFile(File(justTakenFilePath))
-                    val realRef = storageRef.child("application-data/input_faces/${file.lastPathSegment}")
+                    val realRef = storageRef.child("application-data/upload_faces/${file.lastPathSegment}")
                     val uploadTask = realRef.putFile(file)
 
                     uploadTask.addOnFailureListener {
                         Log.d("Upload failed", it.toString())
                     }.addOnSuccessListener {
                         Log.d("Upload success", it.toString())
+                        makeToast("Upload success")
                         realRef.downloadUrl.addOnSuccessListener { uri ->
-                            Log.d("Download URL", uri.toString())
-                            uploadToFirestore(uri.toString()) }
+                            Log.d("Upload URL", uri.toString())
+                            uploadToFirestore(rawImagePath, uri.toString()) }
 //                        run the callApi function and then turn on preview
 
-                        callApi("https://reqres.in/api/users/2")
+//                        callApi("https://reqres.in/api/users/$rawImagePath")
                     }
                     val uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
                     val selection = MediaStore.MediaColumns.DISPLAY_NAME + " = ?"
-                    val selectionArgs = arrayOf("input.jpg")
+                    val selectionArgs = arrayOf(rawImagePath)
                     resolver.delete(uri, selection, selectionArgs)
-                    Log.d("Deleted", "Deleted input.jpg from the gallery")
+                    Log.d("Deleted", "Deleted $rawImagePath from the gallery")
                     turnOnPreview()
                 }
             }
         )
     }
 
-    private fun uploadToFirestore(downloadedURL: String) {
-        Log.d("Upload to Firestore", downloadedURL)
+    private fun uploadToFirestore(fileName: String, uploadedURL: String) {
+        Log.d("Upload to Firestore", uploadedURL)
         val data = hashMapOf(
-            "image_name" to "input.jpg",
-            "image_url" to downloadedURL
+            "image_name" to fileName,
+            "image_url" to uploadedURL,
         )
-        db.collection("input_faces")
-            .document("input")
+        db.collection("upload_faces")
+            .document("upload")
             .set(data)
             .addOnSuccessListener {
                 Log.d("Uploaded to Firestore $TAG", "DocumentSnapshot added")
@@ -227,18 +220,8 @@ class CameraActivity : AppCompatActivity() {
     }
 
     private fun callApi(apiUrl: String) {
-        val rootApiPath = "http://127.0.0.1/verifyfromdb"
-        val successApiPath = "https://reqres.in/api/users/2"
-        val invalidApiPath = "https://asdfasdf.asdfasdf/"
-        val failApiPath = "https://reqres.in/api/users/23"
         val request = Request.Builder()
             .url(apiUrl)
-            .build()
-        val testRequest = Request.Builder()
-            .url(successApiPath)
-            .build()
-        val failRequest = Request.Builder()
-            .url(failApiPath)
             .build()
 
         val failMsg = "Error: API call failed"
@@ -248,7 +231,6 @@ class CameraActivity : AppCompatActivity() {
             override fun onFailure(call: Call, e: IOException) {
                 Log.d("API call invalid", e.toString())
                 makeToast(failMsg)
-//                Toast.makeText(baseContext, failMsg, Toast.LENGTH_SHORT).show()
             }
 
             override fun onResponse(call: Call, response: Response) {
@@ -257,7 +239,6 @@ class CameraActivity : AppCompatActivity() {
                     if (!response.isSuccessful){
                         Log.d("API call failed", "$response")
                         makeToast(unexpectedCode)
-//                        Toast.makeText(baseContext, unexpectedCode, Toast.LENGTH_SHORT).show()
                         throw IOException("Unexpected code $response")
                     }
 
@@ -266,18 +247,12 @@ class CameraActivity : AppCompatActivity() {
                     }
                     val responseBody = response.body!!.string()
                     Log.d("API body", responseBody)
-                    val intent = Intent(this@CameraActivity, SuccessActivity::class.java)
+                    val intent = Intent(this@UploadActivity, SuccessActivity::class.java)
                     intent.putExtra("apiResponseBody", responseBody)
                     startActivity(intent)
                 }
             }
         })
-    }
-
-    private fun makeToast(toastMsg: String) {
-        runOnUiThread {
-            Toast.makeText(baseContext, toastMsg, Toast.LENGTH_SHORT).show()
-        }
     }
 
     private fun turnOnPreview() {
@@ -292,6 +267,11 @@ class CameraActivity : AppCompatActivity() {
         viewBinding.shutterButton.isEnabled = false
     }
 
+    private fun makeToast(toastMsg: String) {
+        runOnUiThread {
+            Toast.makeText(baseContext, toastMsg, Toast.LENGTH_SHORT).show()
+        }
+    }
 
     override fun onDestroy() {
         super.onDestroy()
@@ -299,13 +279,18 @@ class CameraActivity : AppCompatActivity() {
     }
 
     companion object {
-        private const val TAG = "CameraActivity"
+        private const val TAG = "UploadActivity"
         private const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS"
         private const val REQUEST_CODE_PERMISSIONS = 10
         private val REQUIRED_PERMISSIONS =
             mutableListOf (
                 Manifest.permission.CAMERA,
             ).toTypedArray()
+    }
+
+    private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
+        ContextCompat.checkSelfPermission(
+            baseContext, it) == PackageManager.PERMISSION_GRANTED
     }
 
     override fun onRequestPermissionsResult(
@@ -324,6 +309,4 @@ class CameraActivity : AppCompatActivity() {
             }
         }
     }
-
-
 }

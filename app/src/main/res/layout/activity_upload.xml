@@ -4,29 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".CameraActivity">
-
-    <Button
-        android:id="@+id/apiButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="32dp"
-        android:text="Call"
-        android:backgroundTint="@android:color/black"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/shutterButton"
-        app:layout_constraintHorizontal_bias="0.378"
-        app:layout_constraintStart_toStartOf="parent" />
-
-    <Button
-        android:id="@+id/homeButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="32dp"
-        android:layout_marginBottom="32dp"
-        android:text="Home"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+    tools:context=".UploadActivity">
 
     <androidx.camera.view.PreviewView
         android:id="@+id/viewFinder"
@@ -37,15 +15,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" >
     </androidx.camera.view.PreviewView>
-
-    <Button
-        android:id="@+id/switch_btn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Switch"
-        android:visibility="gone"
-        app:layout_constraintEnd_toEndOf="@+id/viewFinder"
-        app:layout_constraintTop_toTopOf="@+id/viewFinder" />
 
     <ImageView
         android:id="@+id/switch_camera"
@@ -83,12 +52,12 @@
         app:layout_constraintStart_toStartOf="parent" />
 
     <EditText
-        android:id="@+id/apiText"
+        android:id="@+id/personName"
         android:layout_width="285dp"
         android:layout_height="53dp"
         android:ems="10"
         android:inputType="textUri"
-        android:hint="API URL"
+        android:hint="Person Name"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.497"
