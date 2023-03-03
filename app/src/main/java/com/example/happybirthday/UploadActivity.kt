@@ -58,8 +58,6 @@ class UploadActivity : AppCompatActivity() {
             )
         }
         viewBinding.switchCamera.setOnClickListener {
-//            viewBinding.loadingPanel.visibility = View.VISIBLE
-//            turnOnPreview()
             if (!allPermissionsGranted())
                 ActivityCompat.requestPermissions(
                     this,
@@ -129,7 +127,7 @@ class UploadActivity : AppCompatActivity() {
 
     private fun takePhoto () {
         // Turn off camera preview
-//        turnOffPreview()
+        turnOffPreview()
         // Get a stable reference of the modifiable image capture use case
         val imageCapture = imageCapture ?: return
 
@@ -164,8 +162,7 @@ class UploadActivity : AppCompatActivity() {
             object : ImageCapture.OnImageSavedCallback {
                 override fun onError(exc: ImageCaptureException) {
                     Log.e(TAG, "Photo capture failed: ${exc.message}", exc)
-//                    viewBinding.loadingPanel.visibility = View.GONE
-//                    turnOnPreview()
+                    turnOnPreview()
                 }
 
                 override fun
@@ -199,7 +196,7 @@ class UploadActivity : AppCompatActivity() {
                     val selectionArgs = arrayOf(rawImagePath)
                     resolver.delete(uri, selection, selectionArgs)
                     Log.d("Deleted", "Deleted $rawImagePath from the gallery")
-//                    turnOnPreview()
+                    turnOnPreview()
                 }
             }
         )
@@ -256,6 +253,18 @@ class UploadActivity : AppCompatActivity() {
                 }
             }
         })
+    }
+
+    private fun turnOnPreview() {
+        viewBinding.loadingPanel.visibility = View.GONE
+        viewBinding.viewFinder.visibility = View.VISIBLE
+        viewBinding.shutterButton.isEnabled = true
+    }
+
+    private fun turnOffPreview() {
+        viewBinding.loadingPanel.visibility = View.VISIBLE
+        viewBinding.viewFinder.visibility = View.INVISIBLE
+        viewBinding.shutterButton.isEnabled = false
     }
 
     private fun makeToast(toastMsg: String) {

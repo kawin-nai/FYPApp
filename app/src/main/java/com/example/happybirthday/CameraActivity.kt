@@ -65,8 +65,6 @@ class CameraActivity : AppCompatActivity() {
         viewBinding.apiButton.setOnClickListener { callApi(viewBinding.apiText.text.toString()) }
         // Select back camera as a default
         viewBinding.switchCamera.setOnClickListener {
-//            viewBinding.loadingPanel.visibility = View.VISIBLE
-//            turnOnPreview()
             if (!allPermissionsGranted())
                 ActivityCompat.requestPermissions(
                     this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
