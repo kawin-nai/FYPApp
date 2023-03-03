@@ -141,7 +141,7 @@ class UploadActivity : AppCompatActivity() {
         Log.d("Name", "Name: $rawName")
         val name = rawName.replace(" ", "_")
         val currentTime = System.currentTimeMillis()
-        val imageName = name +"_" + "$currentTime"
+        val imageName = name + "_" + "$currentTime"
         Log.d("Name + Current Time", "Name: $imageName")
 
         val contentValues = ContentValues().apply {
@@ -156,6 +156,8 @@ class UploadActivity : AppCompatActivity() {
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                 contentValues)
             .build()
+
+
 
         // Set up image capture listener, which is triggered after photo has been taken
         imageCapture.takePicture(
@@ -210,10 +212,10 @@ class UploadActivity : AppCompatActivity() {
             .document("upload")
             .set(data)
             .addOnSuccessListener {
-                Log.d("Uploaded to Firestore", "DocumentSnapshot added")
+                Log.d("Uploaded to Firestore $TAG", "DocumentSnapshot added")
             }
             .addOnFailureListener { e ->
-                Log.w("Firestore upload error", "Error adding document", e)
+                Log.w("Firestore upload error $TAG", "Error adding document", e)
             }
     }
 

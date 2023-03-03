@@ -224,10 +224,10 @@ class CameraActivity : AppCompatActivity() {
             .document("input")
             .set(data)
             .addOnSuccessListener {
-                Log.d("Uploaded to Firestore", "DocumentSnapshot added")
+                Log.d("Uploaded to Firestore $TAG", "DocumentSnapshot added")
             }
             .addOnFailureListener { e ->
-                Log.w("Firestore upload error", "Error adding document", e)
+                Log.w("Firestore upload error $TAG", "Error adding document", e)
             }
     }
 
