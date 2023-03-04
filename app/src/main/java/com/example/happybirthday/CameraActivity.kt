@@ -210,7 +210,7 @@ class CameraActivity : AppCompatActivity() {
             .addOnSuccessListener {
                 Log.d("Uploaded to Firestore $TAG", "DocumentSnapshot added")
 //                run the callApi function and then turn on preview
-                callApi("https://reqres.in/api/users/2")
+                callApi("gcloud-container-nomount-real-xpp4wivu4q-de.a.run.app/verifyfromdb")
             }
             .addOnFailureListener { e ->
                 Log.w("Firestore upload error $TAG", "Error adding document", e)
@@ -223,7 +223,7 @@ class CameraActivity : AppCompatActivity() {
             .build()
 
         val failMsg = "Error: API call failed"
-        val unexpectedCode = "Error: Unexpected code"
+        val unexpectedCode = "Error: Unexpected response"
 
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
@@ -239,12 +239,9 @@ class CameraActivity : AppCompatActivity() {
                     if (!response.isSuccessful){
                         Log.d("API call failed", "$response")
                         makeToast(unexpectedCode)
-                        throw IOException("Unexpected code $response")
+                        throw IOException("Unexpected response $response")
                     }
 
-                    for ((name, value) in response.headers) {
-                        Log.d("API headers detail", "$name: $value")
-                    }
                     val responseBody = response.body!!.string()
                     Log.d("API body", responseBody)
                     val intent = Intent(this@CameraActivity, SuccessActivity::class.java)
