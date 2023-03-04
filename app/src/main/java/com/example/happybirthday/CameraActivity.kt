@@ -97,9 +97,6 @@ class CameraActivity : AppCompatActivity() {
                     it.setSurfaceProvider(viewBinding.viewFinder.surfaceProvider)
                 }
 
-
-
-
             imageCapture = ImageCapture.Builder().setTargetResolution(Size(720, 960)).build()
 
             try {
@@ -172,10 +169,8 @@ class CameraActivity : AppCompatActivity() {
                     turnOnPreview()
                 }
 
-                override fun
-                        onImageSaved(output: ImageCapture.OutputFileResults){
+                override fun onImageSaved(output: ImageCapture.OutputFileResults){
                     val msg = "Photo capture succeeded: ${output.savedUri}"
-//                    Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
                     Log.d(TAG, msg)
 
                     // Test upload image
@@ -189,27 +184,26 @@ class CameraActivity : AppCompatActivity() {
 
                     uploadTask.addOnFailureListener {
                         Log.d("Upload failed", it.toString())
+                        turnOnPreview()
                     }.addOnSuccessListener {
                         Log.d("Upload success", it.toString())
                         realRef.downloadUrl.addOnSuccessListener { uri ->
                             Log.d("Download URL", uri.toString())
-                            uploadToFirestore(uri.toString()) }
-//                        run the callApi function and then turn on preview
-
-                        callApi("https://reqres.in/api/users/2")
+                            uploadToFirestoreAndCallInputApi(uri.toString())
+                        }
                     }
+
                     val uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
                     val selection = MediaStore.MediaColumns.DISPLAY_NAME + " = ?"
                     val selectionArgs = arrayOf("input.jpg")
                     resolver.delete(uri, selection, selectionArgs)
                     Log.d("Deleted", "Deleted input.jpg from the gallery")
-                    turnOnPreview()
                 }
             }
         )
     }
 
-    private fun uploadToFirestore(downloadedURL: String) {
+    private fun uploadToFirestoreAndCallInputApi(downloadedURL: String) {
         Log.d("Upload to Firestore", downloadedURL)
         val data = hashMapOf(
             "image_name" to "input.jpg",
@@ -220,6 +214,8 @@ class CameraActivity : AppCompatActivity() {
             .set(data)
             .addOnSuccessListener {
                 Log.d("Uploaded to Firestore $TAG", "DocumentSnapshot added")
+//                run the callApi function and then turn on preview
+                callApi("https://reqres.in/api/users/2")
             }
             .addOnFailureListener { e ->
                 Log.w("Firestore upload error $TAG", "Error adding document", e)
@@ -227,18 +223,8 @@ class CameraActivity : AppCompatActivity() {
     }
 
     private fun callApi(apiUrl: String) {
-        val rootApiPath = "http://127.0.0.1/verifyfromdb"
-        val successApiPath = "https://reqres.in/api/users/2"
-        val invalidApiPath = "https://asdfasdf.asdfasdf/"
-        val failApiPath = "https://reqres.in/api/users/23"
         val request = Request.Builder()
             .url(apiUrl)
-            .build()
-        val testRequest = Request.Builder()
-            .url(successApiPath)
-            .build()
-        val failRequest = Request.Builder()
-            .url(failApiPath)
             .build()
 
         val failMsg = "Error: API call failed"
@@ -247,17 +233,17 @@ class CameraActivity : AppCompatActivity() {
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 Log.d("API call invalid", e.toString())
+                turnOnPreview()
                 makeToast(failMsg)
-//                Toast.makeText(baseContext, failMsg, Toast.LENGTH_SHORT).show()
             }
 
             override fun onResponse(call: Call, response: Response) {
                 Log.d("API call valid", response.toString())
+                turnOnPreview()
                 response.use {
                     if (!response.isSuccessful){
                         Log.d("API call failed", "$response")
                         makeToast(unexpectedCode)
-//                        Toast.makeText(baseContext, unexpectedCode, Toast.LENGTH_SHORT).show()
                         throw IOException("Unexpected code $response")
                     }
 
@@ -281,15 +267,19 @@ class CameraActivity : AppCompatActivity() {
     }
 
     private fun turnOnPreview() {
-        viewBinding.loadingPanel.visibility = View.GONE
-        viewBinding.viewFinder.visibility = View.VISIBLE
-        viewBinding.shutterButton.isEnabled = true
+        runOnUiThread {
+            viewBinding.loadingPanel.visibility = View.GONE
+            viewBinding.viewFinder.visibility = View.VISIBLE
+            viewBinding.shutterButton.isEnabled = true
+        }
     }
 
     private fun turnOffPreview() {
-        viewBinding.loadingPanel.visibility = View.VISIBLE
-        viewBinding.viewFinder.visibility = View.INVISIBLE
-        viewBinding.shutterButton.isEnabled = false
+        runOnUiThread {
+            viewBinding.loadingPanel.visibility = View.VISIBLE
+            viewBinding.viewFinder.visibility = View.INVISIBLE
+            viewBinding.shutterButton.isEnabled = false
+        }
     }
 
 

@@ -32,6 +32,7 @@ import java.util.concurrent.ExecutorService
 // TODO : Verify name before submission
 // TODO : Add face detection before upload
 // TODO : Add multiple stages of face upload
+// TODO : Add auth before upload
 class UploadActivity : AppCompatActivity() {
     private lateinit var viewBinding: ActivityUploadBinding
 
@@ -179,28 +180,26 @@ class UploadActivity : AppCompatActivity() {
 
                     uploadTask.addOnFailureListener {
                         Log.d("Upload failed", it.toString())
+                        turnOnPreview()
                     }.addOnSuccessListener {
                         Log.d("Upload success", it.toString())
                         makeToast("Upload success")
                         realRef.downloadUrl.addOnSuccessListener { uri ->
                             Log.d("Upload URL", uri.toString())
-                            uploadToFirestore(rawImagePath, uri.toString()) }
-//                        run the callApi function and then turn on preview
-
-//                        callApi("https://reqres.in/api/users/$rawImagePath")
+                            uploadToFirestoreAndCallUploadApi(rawImagePath, uri.toString()) }
                     }
                     val uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
                     val selection = MediaStore.MediaColumns.DISPLAY_NAME + " = ?"
                     val selectionArgs = arrayOf(rawImagePath)
                     resolver.delete(uri, selection, selectionArgs)
                     Log.d("Deleted", "Deleted $rawImagePath from the gallery")
-                    turnOnPreview()
+
                 }
             }
         )
     }
 
-    private fun uploadToFirestore(fileName: String, uploadedURL: String) {
+    private fun uploadToFirestoreAndCallUploadApi(fileName: String, uploadedURL: String) {
         Log.d("Upload to Firestore", uploadedURL)
         val data = hashMapOf(
             "image_name" to fileName,
@@ -211,6 +210,7 @@ class UploadActivity : AppCompatActivity() {
             .set(data)
             .addOnSuccessListener {
                 Log.d("Uploaded to Firestore $TAG", "DocumentSnapshot added")
+                callApi("https://reqres.in/api/users/$fileName")
             }
             .addOnFailureListener { e ->
                 Log.w("Firestore upload error $TAG", "Error adding document", e)
@@ -228,11 +228,13 @@ class UploadActivity : AppCompatActivity() {
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 Log.d("API call invalid", e.toString())
+                turnOnPreview()
                 makeToast(failMsg)
             }
 
             override fun onResponse(call: Call, response: Response) {
                 Log.d("API call valid", response.toString())
+                turnOnPreview()
                 response.use {
                     if (!response.isSuccessful){
                         Log.d("API call failed", "$response")
@@ -254,15 +256,19 @@ class UploadActivity : AppCompatActivity() {
     }
 
     private fun turnOnPreview() {
-        viewBinding.loadingPanel.visibility = View.GONE
-        viewBinding.viewFinder.visibility = View.VISIBLE
-        viewBinding.shutterButton.isEnabled = true
+        runOnUiThread {
+            viewBinding.loadingPanel.visibility = View.GONE
+            viewBinding.viewFinder.visibility = View.VISIBLE
+            viewBinding.shutterButton.isEnabled = true
+        }
     }
 
     private fun turnOffPreview() {
-        viewBinding.loadingPanel.visibility = View.VISIBLE
-        viewBinding.viewFinder.visibility = View.INVISIBLE
-        viewBinding.shutterButton.isEnabled = false
+        runOnUiThread {
+            viewBinding.loadingPanel.visibility = View.VISIBLE
+            viewBinding.viewFinder.visibility = View.INVISIBLE
+            viewBinding.shutterButton.isEnabled = false
+        }
     }
 
     private fun makeToast(toastMsg: String) {
