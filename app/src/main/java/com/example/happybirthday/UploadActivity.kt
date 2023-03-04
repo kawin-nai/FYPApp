@@ -17,7 +17,6 @@ import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.example.happybirthday.databinding.ActivityCameraBinding
 import com.example.happybirthday.databinding.ActivityUploadBinding
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -54,15 +53,15 @@ class UploadActivity : AppCompatActivity() {
             startCamera()
         } else {
             ActivityCompat.requestPermissions(
-                this, UploadActivity.REQUIRED_PERMISSIONS, UploadActivity.REQUEST_CODE_PERMISSIONS
+                this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS
             )
         }
         viewBinding.switchCamera.setOnClickListener {
             if (!allPermissionsGranted())
                 ActivityCompat.requestPermissions(
                     this,
-                    UploadActivity.REQUIRED_PERMISSIONS,
-                    UploadActivity.REQUEST_CODE_PERMISSIONS
+                    REQUIRED_PERMISSIONS,
+                    REQUEST_CODE_PERMISSIONS
                 )
             cameraSelector = if (cameraSelector == CameraSelector.DEFAULT_BACK_CAMERA) {
                 CameraSelector.DEFAULT_FRONT_CAMERA
@@ -71,7 +70,15 @@ class UploadActivity : AppCompatActivity() {
             }
             startCamera()
         }
-        viewBinding.shutterButton.setOnClickListener { takePhoto() }
+        viewBinding.shutterButton.setOnClickListener {
+            val inputName = viewBinding.personName.text.toString()
+            if (inputName.isEmpty()) {
+                viewBinding.personName.error = "This field cannot be empty"
+            }
+            else {
+                takePhoto()
+            }
+        }
     }
 
     private fun startCamera () {
@@ -104,7 +111,7 @@ class UploadActivity : AppCompatActivity() {
                 val viewFinder = viewBinding.viewFinder
 
                 // Add touch to focus listener
-                viewFinder.setOnTouchListener setOnTouchListener@{ view: View, motionEvent: MotionEvent ->
+                viewFinder.setOnTouchListener setOnTouchListener@{ _: View, motionEvent: MotionEvent ->
                     when (motionEvent.action) {
                         MotionEvent.ACTION_DOWN -> return@setOnTouchListener true
                         MotionEvent.ACTION_UP -> {
@@ -284,7 +291,6 @@ class UploadActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "UploadActivity"
-        private const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS"
         private const val REQUEST_CODE_PERMISSIONS = 10
         private val REQUIRED_PERMISSIONS =
             mutableListOf (

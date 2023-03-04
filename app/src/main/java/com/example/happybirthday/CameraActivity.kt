@@ -5,8 +5,6 @@ import android.content.ContentValues
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
@@ -14,21 +12,18 @@ import android.util.Size
 import android.view.MotionEvent
 import android.view.View
 import android.widget.Toast
-import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.happybirthday.databinding.ActivityCameraBinding
-import com.google.firebase.ktx.Firebase
-import com.google.firebase.storage.StorageReference
-import com.google.firebase.storage.ktx.storage
 import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.ktx.storage
 import okhttp3.*
 import java.io.File
 import java.io.IOException
-import java.text.SimpleDateFormat
-import java.util.*
 import java.util.concurrent.ExecutorService
 
 // todo: alternatively, use on-device ML to get embeddings and call the API with the embeddings
@@ -113,7 +108,7 @@ class CameraActivity : AppCompatActivity() {
                 val viewFinder = viewBinding.viewFinder
 
                 // Add touch to focus listener
-                viewFinder.setOnTouchListener setOnTouchListener@{ view: View, motionEvent: MotionEvent ->
+                viewFinder.setOnTouchListener setOnTouchListener@{ _: View, motionEvent: MotionEvent ->
                     when (motionEvent.action) {
                         MotionEvent.ACTION_DOWN -> return@setOnTouchListener true
                         MotionEvent.ACTION_UP -> {
@@ -290,7 +285,6 @@ class CameraActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "CameraActivity"
-        private const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS"
         private const val REQUEST_CODE_PERMISSIONS = 10
         private val REQUIRED_PERMISSIONS =
             mutableListOf (
