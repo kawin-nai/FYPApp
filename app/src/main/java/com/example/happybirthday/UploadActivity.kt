@@ -30,7 +30,6 @@ import java.util.concurrent.ExecutorService
 
 // TODO : Add actual API link
 // TODO : Verify name before submission
-// TODO : Add loading screen (turn preview on/off)
 // TODO : Add face detection before upload
 // TODO : Add multiple stages of face upload
 class UploadActivity : AppCompatActivity() {
@@ -165,8 +164,7 @@ class UploadActivity : AppCompatActivity() {
                     turnOnPreview()
                 }
 
-                override fun
-                        onImageSaved(output: ImageCapture.OutputFileResults){
+                override fun onImageSaved(output: ImageCapture.OutputFileResults){
                     val msg = "Photo capture succeeded: ${output.savedUri}"
                     Log.d(TAG, msg)
 

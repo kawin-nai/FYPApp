@@ -8,7 +8,6 @@ import com.example.happybirthday.databinding.ActivitySuccessBinding
 import okhttp3.ResponseBody.Companion.toResponseBody
 
 class SuccessActivity : AppCompatActivity() {
-    private lateinit var backButton: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
