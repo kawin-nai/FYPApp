@@ -207,18 +207,17 @@ class CameraActivity : AppCompatActivity() {
             .addOnSuccessListener {
                 Log.d("Uploaded to Firestore $TAG", "DocumentSnapshot added")
 //                run the callApi function and then turn on preview
-                callApi("https://gcloud-container-nomount-real-xpp4wivu4q-de.a.run.app/verifyfromdb")
-//                callApi("https://reqres.in/api/users/2")
+                callVerifyApi()
             }
             .addOnFailureListener { e ->
                 Log.w("Firestore upload error $TAG", "Error adding document", e)
             }
     }
 
-    private fun callApi(apiUrl: String) {
+    private fun callVerifyApi() {
         makeToast("Verifying")
         val request = Request.Builder()
-            .url(apiUrl)
+            .url(API_URL)
             .build()
 
         val failMsg = "Error: API call failed"
@@ -276,12 +275,13 @@ class CameraActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-//        cameraExecutor.shutdown()
+        cameraExecutor.shutdown()
     }
 
     companion object {
         private const val TAG = "CameraActivity"
         private const val REQUEST_CODE_PERMISSIONS = 10
+        private const val API_URL = "https://gcloud-container-nomount-real-xpp4wivu4q-de.a.run.app/verifyfromdb"
         private val REQUIRED_PERMISSIONS =
             mutableListOf (
                 Manifest.permission.CAMERA,

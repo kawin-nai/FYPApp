@@ -27,8 +27,6 @@ import java.io.IOException
 import java.util.concurrent.ExecutorService
 
 
-// TODO : Add actual API link
-// TODO : Verify name before submission
 // TODO : Add face detection before upload
 // TODO : Add multiple stages of face upload
 // TODO : Add auth before upload
