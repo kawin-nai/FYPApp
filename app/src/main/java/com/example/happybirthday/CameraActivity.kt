@@ -222,7 +222,6 @@ class CameraActivity : AppCompatActivity() {
     }
 
     private fun callApi(apiUrl: String) {
-        val url = HttpUrl
         makeToast("Verifying")
         val request = Request.Builder()
             .url(apiUrl)

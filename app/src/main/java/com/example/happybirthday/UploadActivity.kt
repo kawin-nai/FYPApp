@@ -2,6 +2,7 @@ package com.example.happybirthday
 
 import android.Manifest
 import android.content.ContentValues
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
@@ -225,7 +226,7 @@ class UploadActivity : AppCompatActivity() {
     }
 
     private fun callApi(apiUrl: String) {
-        makeToast("Uploading")
+        makeToast("Checking face")
         val requestBody = FormBody.Builder()
             .build()
         val request = Request.Builder()
@@ -254,6 +255,8 @@ class UploadActivity : AppCompatActivity() {
                     }
                     val responseBody = response.body!!.string()
                     Log.d("API body", responseBody)
+                    val intent = Intent(this@UploadActivity, CameraActivity::class.java)
+                    startActivity(intent)
                 }
             }
         })
