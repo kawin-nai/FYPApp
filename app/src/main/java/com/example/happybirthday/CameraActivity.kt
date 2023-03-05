@@ -161,12 +161,14 @@ class CameraActivity : AppCompatActivity() {
             object : ImageCapture.OnImageSavedCallback {
                 override fun onError(exc: ImageCaptureException) {
                     Log.e(TAG, "Photo capture failed: ${exc.message}", exc)
+                    makeToast("Camera Error")
                     turnOnPreview()
                 }
 
                 override fun onImageSaved(output: ImageCapture.OutputFileResults){
                     val msg = "Photo capture succeeded: ${output.savedUri}"
                     Log.d(TAG, msg)
+                    makeToast("Uploading")
 
                     // Test upload image
                     // Root file path of the saved image
@@ -179,6 +181,7 @@ class CameraActivity : AppCompatActivity() {
 
                     uploadTask.addOnFailureListener {
                         Log.d("Upload failed", it.toString())
+                        makeToast("Upload failed")
                         turnOnPreview()
                     }.addOnSuccessListener {
                         Log.d("Upload success", it.toString())
@@ -210,7 +213,8 @@ class CameraActivity : AppCompatActivity() {
             .addOnSuccessListener {
                 Log.d("Uploaded to Firestore $TAG", "DocumentSnapshot added")
 //                run the callApi function and then turn on preview
-                callApi("gcloud-container-nomount-real-xpp4wivu4q-de.a.run.app/verifyfromdb")
+                callApi("https://gcloud-container-nomount-real-xpp4wivu4q-de.a.run.app/verifyfromdb")
+//                callApi("https://reqres.in/api/users/2")
             }
             .addOnFailureListener { e ->
                 Log.w("Firestore upload error $TAG", "Error adding document", e)
@@ -218,12 +222,14 @@ class CameraActivity : AppCompatActivity() {
     }
 
     private fun callApi(apiUrl: String) {
+        val url = HttpUrl
+        makeToast("Verifying")
         val request = Request.Builder()
             .url(apiUrl)
             .build()
 
         val failMsg = "Error: API call failed"
-        val unexpectedCode = "Error: Unexpected response"
+        val unexpectedCode = "Error: Face not verified"
 
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
@@ -277,7 +283,7 @@ class CameraActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        cameraExecutor.shutdown()
+//        cameraExecutor.shutdown()
     }
 
     companion object {

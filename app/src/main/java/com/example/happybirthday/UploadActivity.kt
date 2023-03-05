@@ -160,7 +160,6 @@ class UploadActivity : AppCompatActivity() {
             .build()
 
 
-
         // Set up image capture listener, which is triggered after photo has been taken
         imageCapture.takePicture(
             outputOptions,
@@ -174,6 +173,7 @@ class UploadActivity : AppCompatActivity() {
                 override fun onImageSaved(output: ImageCapture.OutputFileResults){
                     val msg = "Photo capture succeeded: ${output.savedUri}"
                     Log.d(TAG, msg)
+                    makeToast("Uploading")
 
                     // Test upload image
                     // Root file path of the saved image
@@ -186,6 +186,7 @@ class UploadActivity : AppCompatActivity() {
 
                     uploadTask.addOnFailureListener {
                         Log.d("Upload failed", it.toString())
+                        makeToast("Upload failed")
                         turnOnPreview()
                     }.addOnSuccessListener {
                         Log.d("Upload success", it.toString())
@@ -216,7 +217,7 @@ class UploadActivity : AppCompatActivity() {
             .set(data)
             .addOnSuccessListener {
                 Log.d("Uploaded to Firestore $TAG", "DocumentSnapshot added")
-                callApi("gcloud-container-nomount-real-xpp4wivu4q-de.a.run.app/uploadtodb/$fileName")
+                callApi("https://gcloud-container-nomount-real-xpp4wivu4q-de.a.run.app/uploadtodb/$fileName")
             }
             .addOnFailureListener { e ->
                 Log.w("Firestore upload error $TAG", "Error adding document", e)
@@ -224,6 +225,7 @@ class UploadActivity : AppCompatActivity() {
     }
 
     private fun callApi(apiUrl: String) {
+        makeToast("Uploading")
         val requestBody = FormBody.Builder()
             .build()
         val request = Request.Builder()
