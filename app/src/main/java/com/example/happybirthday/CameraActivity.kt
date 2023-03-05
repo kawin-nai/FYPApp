@@ -44,11 +44,6 @@ class CameraActivity : AppCompatActivity() {
         viewBinding = ActivityCameraBinding.inflate(layoutInflater)
         setContentView(viewBinding.root)
 
-        viewBinding.homeButton.setOnClickListener {
-            Log.i(TAG, "Home Button clicked")
-            val intent = Intent(this, MainActivity::class.java)
-            startActivity(intent)
-        }
         if (allPermissionsGranted()){
             startCamera()
         } else {
@@ -57,7 +52,6 @@ class CameraActivity : AppCompatActivity() {
         }
 
         viewBinding.shutterButton.setOnClickListener { takePhoto() }
-        viewBinding.apiButton.setOnClickListener { callApi(viewBinding.apiText.text.toString()) }
         // Select back camera as a default
         viewBinding.switchCamera.setOnClickListener {
             if (!allPermissionsGranted())
