@@ -11,6 +11,7 @@ import android.util.Log
 import android.util.Size
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
@@ -21,21 +22,26 @@ import com.example.happybirthday.databinding.ActivityCameraBinding
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
+import com.google.gson.Gson
+import com.google.mlkit.vision.face.FaceDetector
 import okhttp3.*
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 // todo: alternatively, use on-device ML to get embeddings and call the API with the embeddings
 
 class CameraActivity : AppCompatActivity() {
     private lateinit var viewBinding: ActivityCameraBinding
+    private val gson = Gson()
 
     private var imageCapture: ImageCapture? = null
-    private lateinit var cameraExecutor: ExecutorService
+    private var cameraExecutor = Executors.newSingleThreadExecutor()
     private val storage = Firebase.storage
     private var storageRef = storage.reference
     private val db = Firebase.firestore
+    private lateinit var overlay: Overlay
 
     private val client = OkHttpClient()
     private var cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
@@ -43,6 +49,12 @@ class CameraActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         viewBinding = ActivityCameraBinding.inflate(layoutInflater)
         setContentView(viewBinding.root)
+        overlay = Overlay(this)
+        val layoutOverlay = ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
+        this.addContentView(overlay,layoutOverlay)
 
         if (allPermissionsGranted()){
             startCamera()
@@ -86,6 +98,12 @@ class CameraActivity : AppCompatActivity() {
                     it.setSurfaceProvider(viewBinding.viewFinder.surfaceProvider)
                 }
 
+            val analysisUseCase = ImageAnalysis.Builder()
+                .build()
+                .also {
+                    it.setAnalyzer(cameraExecutor, FaceAnalyzer(lifecycle, overlay))
+                }
+
             imageCapture = ImageCapture.Builder().setTargetResolution(Size(720, 960)).build()
 
             try {
@@ -94,7 +112,7 @@ class CameraActivity : AppCompatActivity() {
 
                 // Bind use cases to camera
                 val camera = cameraProvider.bindToLifecycle(
-                    this, cameraSelector, preview, imageCapture)
+                    this, cameraSelector, preview, imageCapture, analysisUseCase)
 
                 // Get the CameraControl instance from camera
                 val cameraControl = camera.cameraControl
@@ -242,9 +260,15 @@ class CameraActivity : AppCompatActivity() {
 
                     val responseBody = response.body!!.string()
                     Log.d("API body", responseBody)
-                    val intent = Intent(this@CameraActivity, SuccessActivity::class.java)
-                    intent.putExtra("apiResponseBody", responseBody)
-                    startActivity(intent)
+                    val jsonResponse = gson.fromJson(responseBody, FaceVerificationResponse::class.java)
+                    if (jsonResponse.verified == "True") {
+                        val intent = Intent(this@CameraActivity, SuccessActivity::class.java)
+                        intent.putExtra("apiResponseBody", responseBody)
+                        startActivity(intent)
+                    }
+                    else {
+                        makeToast("Face Unknown")
+                    }
                 }
             }
         })
@@ -275,13 +299,14 @@ class CameraActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        cameraExecutor.shutdown()
+//        cameraExecutor.shutdown()
     }
 
     companion object {
         private const val TAG = "CameraActivity"
         private const val REQUEST_CODE_PERMISSIONS = 10
-        private const val API_URL = "https://gcloud-container-nomount-real-xpp4wivu4q-de.a.run.app/verifyfromdb"
+//        private const val API_URL = "https://gcloud-container-nomount-real-xpp4wivu4q-de.a.run.app/verifyfromdb"
+        private const val API_URL = "https://gcloud-container-nomount-real-resnet-xpp4wivu4q-de.a.run.app/verifyfromdb"
         private val REQUIRED_PERMISSIONS =
             mutableListOf (
                 Manifest.permission.CAMERA,

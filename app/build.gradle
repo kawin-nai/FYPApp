@@ -70,5 +70,6 @@ dependencies {
     // https://firebase.google.com/docs/android/setup#available-libraries
 
     implementation "com.squareup.okhttp3:okhttp:4.10.0"
+    implementation "com.google.mlkit:face-detection:16.1.5"
 
 }
