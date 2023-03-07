@@ -21,7 +21,6 @@ class Overlay @JvmOverloads constructor(
     private var previewHeight: Int = 0
     private var heightScaleFactor = 1.0f
     private var faces = emptyArray<Face>()
-    private var orientation = Configuration.ORIENTATION_LANDSCAPE
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.YELLOW
         style = Paint.Style.STROKE
@@ -35,10 +34,6 @@ class Overlay @JvmOverloads constructor(
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         drawOverlay(canvas);
-    }
-    fun setOrientation(orientation: Int)
-    {
-        this.orientation = orientation
     }
     fun setPreviewSize(size: Size) {
         // Need to swap width and height when in portrait, since camera's natural orientation is landscape.
