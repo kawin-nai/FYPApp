@@ -5,55 +5,59 @@ import android.content.ContentValues
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
 import android.util.Size
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewGroup
 import android.widget.Toast
-import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.happybirthday.databinding.ActivityCameraBinding
-import com.google.firebase.ktx.Firebase
-import com.google.firebase.storage.StorageReference
-import com.google.firebase.storage.ktx.storage
 import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.ktx.storage
+import com.google.gson.Gson
+import com.google.mlkit.vision.face.FaceDetector
 import okhttp3.*
 import java.io.File
 import java.io.IOException
-import java.text.SimpleDateFormat
-import java.util.*
 import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 // todo: alternatively, use on-device ML to get embeddings and call the API with the embeddings
 
 class CameraActivity : AppCompatActivity() {
     private lateinit var viewBinding: ActivityCameraBinding
+    private val gson = Gson()
 
     private var imageCapture: ImageCapture? = null
-    private lateinit var cameraExecutor: ExecutorService
+    private var cameraExecutor = Executors.newSingleThreadExecutor()
     private val storage = Firebase.storage
     private var storageRef = storage.reference
     private val db = Firebase.firestore
+    private lateinit var overlay: Overlay
 
-    private val client = OkHttpClient()
+    private val client = OkHttpClient.Builder().connectTimeout(10, TimeUnit.SECONDS)
+        .writeTimeout(10, TimeUnit.SECONDS).readTimeout(10, TimeUnit.SECONDS).build()
     private var cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewBinding = ActivityCameraBinding.inflate(layoutInflater)
         setContentView(viewBinding.root)
+        overlay = Overlay(this)
+        val layoutOverlay = ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
+        this.addContentView(overlay,layoutOverlay)
 
-        viewBinding.homeButton.setOnClickListener {
-            Log.i(TAG, "Home Button clicked")
-            val intent = Intent(this, MainActivity::class.java)
-            startActivity(intent)
-        }
         if (allPermissionsGranted()){
             startCamera()
         } else {
@@ -62,7 +66,6 @@ class CameraActivity : AppCompatActivity() {
         }
 
         viewBinding.shutterButton.setOnClickListener { takePhoto() }
-        viewBinding.apiButton.setOnClickListener { callApi(viewBinding.apiText.text.toString()) }
         // Select back camera as a default
         viewBinding.switchCamera.setOnClickListener {
             if (!allPermissionsGranted())
@@ -75,7 +78,10 @@ class CameraActivity : AppCompatActivity() {
             }
             startCamera()
         }
-
+        viewBinding.upload.setOnClickListener {
+            val intent = Intent(this@CameraActivity, UploadActivity::class.java)
+            startActivity(intent)
+        }
     }
 
     private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
@@ -97,7 +103,14 @@ class CameraActivity : AppCompatActivity() {
                     it.setSurfaceProvider(viewBinding.viewFinder.surfaceProvider)
                 }
 
-            imageCapture = ImageCapture.Builder().setTargetResolution(Size(720, 960)).build()
+            val analysisUseCase = ImageAnalysis.Builder()
+                .build()
+                .also {
+                    it.setAnalyzer(cameraExecutor, FaceAnalyzer(lifecycle, overlay))
+                }
+
+            imageCapture = ImageCapture.Builder().setTargetResolution(Size(1200, 1600)).build()
+//            imageCapture = ImageCapture.Builder().build()
 
             try {
                 // Unbind use cases before rebinding
@@ -105,7 +118,7 @@ class CameraActivity : AppCompatActivity() {
 
                 // Bind use cases to camera
                 val camera = cameraProvider.bindToLifecycle(
-                    this, cameraSelector, preview, imageCapture)
+                    this, cameraSelector, preview, imageCapture, analysisUseCase)
 
                 // Get the CameraControl instance from camera
                 val cameraControl = camera.cameraControl
@@ -113,7 +126,7 @@ class CameraActivity : AppCompatActivity() {
                 val viewFinder = viewBinding.viewFinder
 
                 // Add touch to focus listener
-                viewFinder.setOnTouchListener setOnTouchListener@{ view: View, motionEvent: MotionEvent ->
+                viewFinder.setOnTouchListener setOnTouchListener@{ _: View, motionEvent: MotionEvent ->
                     when (motionEvent.action) {
                         MotionEvent.ACTION_DOWN -> return@setOnTouchListener true
                         MotionEvent.ACTION_UP -> {
@@ -166,12 +179,14 @@ class CameraActivity : AppCompatActivity() {
             object : ImageCapture.OnImageSavedCallback {
                 override fun onError(exc: ImageCaptureException) {
                     Log.e(TAG, "Photo capture failed: ${exc.message}", exc)
+                    makeToast("Camera Error")
                     turnOnPreview()
                 }
 
                 override fun onImageSaved(output: ImageCapture.OutputFileResults){
                     val msg = "Photo capture succeeded: ${output.savedUri}"
                     Log.d(TAG, msg)
+                    makeToast("Uploading")
 
                     // Test upload image
                     // Root file path of the saved image
@@ -184,6 +199,7 @@ class CameraActivity : AppCompatActivity() {
 
                     uploadTask.addOnFailureListener {
                         Log.d("Upload failed", it.toString())
+                        makeToast("Upload failed")
                         turnOnPreview()
                     }.addOnSuccessListener {
                         Log.d("Upload success", it.toString())
@@ -204,7 +220,7 @@ class CameraActivity : AppCompatActivity() {
     }
 
     private fun uploadToFirestoreAndCallInputApi(downloadedURL: String) {
-        Log.d("Upload to Firestore", downloadedURL)
+//        Log.d("Upload to Firestore", downloadedURL)
         val data = hashMapOf(
             "image_name" to "input.jpg",
             "image_url" to downloadedURL
@@ -215,20 +231,21 @@ class CameraActivity : AppCompatActivity() {
             .addOnSuccessListener {
                 Log.d("Uploaded to Firestore $TAG", "DocumentSnapshot added")
 //                run the callApi function and then turn on preview
-                callApi("https://reqres.in/api/users/2")
+                callVerifyApi()
             }
             .addOnFailureListener { e ->
                 Log.w("Firestore upload error $TAG", "Error adding document", e)
             }
     }
 
-    private fun callApi(apiUrl: String) {
+    private fun callVerifyApi() {
+        makeToast("Verifying")
         val request = Request.Builder()
-            .url(apiUrl)
+            .url(API_URL)
             .build()
 
         val failMsg = "Error: API call failed"
-        val unexpectedCode = "Error: Unexpected code"
+        val unexpectedCode = "Error: Face not verified"
 
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
@@ -242,19 +259,22 @@ class CameraActivity : AppCompatActivity() {
                 turnOnPreview()
                 response.use {
                     if (!response.isSuccessful){
-                        Log.d("API call failed", "$response")
+                        Log.d("API call failed", response.body!!.string())
                         makeToast(unexpectedCode)
-                        throw IOException("Unexpected code $response")
+                        throw IOException("Unexpected response $response")
                     }
 
-                    for ((name, value) in response.headers) {
-                        Log.d("API headers detail", "$name: $value")
-                    }
                     val responseBody = response.body!!.string()
                     Log.d("API body", responseBody)
-                    val intent = Intent(this@CameraActivity, SuccessActivity::class.java)
-                    intent.putExtra("apiResponseBody", responseBody)
-                    startActivity(intent)
+                    val jsonResponse = gson.fromJson(responseBody, FaceVerificationResponse::class.java)
+                    if (jsonResponse.verified == "True") {
+                        val intent = Intent(this@CameraActivity, SuccessActivity::class.java)
+                        intent.putExtra("apiResponseBody", responseBody)
+                        startActivity(intent)
+                    }
+                    else {
+                        makeToast("Face Unknown")
+                    }
                 }
             }
         })
@@ -285,13 +305,15 @@ class CameraActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        cameraExecutor.shutdown()
+//        cameraExecutor.shutdown()
     }
 
     companion object {
         private const val TAG = "CameraActivity"
-        private const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS"
         private const val REQUEST_CODE_PERMISSIONS = 10
+//        private const val API_URL = "https://gcloud-container-nomount-real-xpp4wivu4q-de.a.run.app/verifyfromdb"
+//        private const val API_URL = "https://gcloud-container-nomount-real-resnet-xpp4wivu4q-de.a.run.app/verifyfromdb"
+        private const val API_URL = "https://gcloud-container-nomount-real-resnet-senet-xpp4wivu4q-de.a.run.app/verifyfromdb"
         private val REQUIRED_PERMISSIONS =
             mutableListOf (
                 Manifest.permission.CAMERA,

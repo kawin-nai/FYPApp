@@ -1,14 +1,16 @@
 package com.example.happybirthday
 
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.widget.Button
+import android.text.method.ScrollingMovementMethod
+import android.util.Log
+import androidx.appcompat.app.AppCompatActivity
 import com.example.happybirthday.databinding.ActivitySuccessBinding
-import okhttp3.ResponseBody.Companion.toResponseBody
+import com.google.gson.Gson
 
 class SuccessActivity : AppCompatActivity() {
 
+    private val gson = Gson()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val binding = ActivitySuccessBinding.inflate(layoutInflater)
@@ -18,6 +20,9 @@ class SuccessActivity : AppCompatActivity() {
             startActivity(intent)
         }
         val apiResponseBody = intent.getStringExtra("apiResponseBody")
+        val jsonResponse = gson.fromJson(apiResponseBody, FaceVerificationResponse::class.java)
+        Log.d("JSON Response", jsonResponse.toString())
+        binding.apiResponse.movementMethod = ScrollingMovementMethod()
         binding.apiResponse.text = apiResponseBody
         binding.uploadButton.setOnClickListener {
             val intent = Intent(this, UploadActivity::class.java)

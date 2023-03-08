@@ -17,7 +17,6 @@ import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.example.happybirthday.databinding.ActivityCameraBinding
 import com.example.happybirthday.databinding.ActivityUploadBinding
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -26,10 +25,9 @@ import okhttp3.*
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.ExecutorService
+import java.util.concurrent.TimeUnit
 
 
-// TODO : Add actual API link
-// TODO : Verify name before submission
 // TODO : Add face detection before upload
 // TODO : Add multiple stages of face upload
 // TODO : Add auth before upload
@@ -42,7 +40,8 @@ class UploadActivity : AppCompatActivity() {
     private var storageRef = storage.reference
     private val db = Firebase.firestore
 
-    private val client = OkHttpClient()
+    private val client = OkHttpClient.Builder().connectTimeout(10, TimeUnit.SECONDS)
+        .writeTimeout(10, TimeUnit.SECONDS).readTimeout(10, TimeUnit.SECONDS).build()
     private var cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,15 +53,15 @@ class UploadActivity : AppCompatActivity() {
             startCamera()
         } else {
             ActivityCompat.requestPermissions(
-                this, UploadActivity.REQUIRED_PERMISSIONS, UploadActivity.REQUEST_CODE_PERMISSIONS
+                this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS
             )
         }
         viewBinding.switchCamera.setOnClickListener {
             if (!allPermissionsGranted())
                 ActivityCompat.requestPermissions(
                     this,
-                    UploadActivity.REQUIRED_PERMISSIONS,
-                    UploadActivity.REQUEST_CODE_PERMISSIONS
+                    REQUIRED_PERMISSIONS,
+                    REQUEST_CODE_PERMISSIONS
                 )
             cameraSelector = if (cameraSelector == CameraSelector.DEFAULT_BACK_CAMERA) {
                 CameraSelector.DEFAULT_FRONT_CAMERA
@@ -71,7 +70,15 @@ class UploadActivity : AppCompatActivity() {
             }
             startCamera()
         }
-        viewBinding.shutterButton.setOnClickListener { takePhoto() }
+        viewBinding.shutterButton.setOnClickListener {
+            val inputName = viewBinding.personName.text.toString()
+            if (inputName.isEmpty()) {
+                viewBinding.personName.error = "This field cannot be empty"
+            }
+            else {
+                takePhoto()
+            }
+        }
     }
 
     private fun startCamera () {
@@ -88,7 +95,8 @@ class UploadActivity : AppCompatActivity() {
                     it.setSurfaceProvider(viewBinding.viewFinder.surfaceProvider)
                 }
 
-            imageCapture = ImageCapture.Builder().setTargetResolution(Size(720, 960)).build()
+            imageCapture = ImageCapture.Builder().setTargetResolution(Size(1200, 1600)).build()
+//            imageCapture = ImageCapture.Builder().build()
 
             try {
                 // Unbind use cases before rebinding
@@ -104,7 +112,7 @@ class UploadActivity : AppCompatActivity() {
                 val viewFinder = viewBinding.viewFinder
 
                 // Add touch to focus listener
-                viewFinder.setOnTouchListener setOnTouchListener@{ view: View, motionEvent: MotionEvent ->
+                viewFinder.setOnTouchListener setOnTouchListener@{ _: View, motionEvent: MotionEvent ->
                     when (motionEvent.action) {
                         MotionEvent.ACTION_DOWN -> return@setOnTouchListener true
                         MotionEvent.ACTION_UP -> {
@@ -154,7 +162,6 @@ class UploadActivity : AppCompatActivity() {
             .build()
 
 
-
         // Set up image capture listener, which is triggered after photo has been taken
         imageCapture.takePicture(
             outputOptions,
@@ -168,6 +175,7 @@ class UploadActivity : AppCompatActivity() {
                 override fun onImageSaved(output: ImageCapture.OutputFileResults){
                     val msg = "Photo capture succeeded: ${output.savedUri}"
                     Log.d(TAG, msg)
+                    makeToast("Uploading")
 
                     // Test upload image
                     // Root file path of the saved image
@@ -180,6 +188,7 @@ class UploadActivity : AppCompatActivity() {
 
                     uploadTask.addOnFailureListener {
                         Log.d("Upload failed", it.toString())
+                        makeToast("Upload failed")
                         turnOnPreview()
                     }.addOnSuccessListener {
                         Log.d("Upload success", it.toString())
@@ -210,7 +219,8 @@ class UploadActivity : AppCompatActivity() {
             .set(data)
             .addOnSuccessListener {
                 Log.d("Uploaded to Firestore $TAG", "DocumentSnapshot added")
-                callApi("https://reqres.in/api/users/$fileName")
+                callApi("https://gcloud-container-nomount-real-resnet-senet-xpp4wivu4q-de.a.run.app/uploadtodb/$fileName")
+//                callApi("https://gcloud-container-nomount-real-resnet-xpp4wivu4q-de.a.run.app/uploadtodb/$fileName")
             }
             .addOnFailureListener { e ->
                 Log.w("Firestore upload error $TAG", "Error adding document", e)
@@ -218,12 +228,16 @@ class UploadActivity : AppCompatActivity() {
     }
 
     private fun callApi(apiUrl: String) {
+        makeToast("Checking face")
+        val requestBody = FormBody.Builder()
+            .build()
         val request = Request.Builder()
             .url(apiUrl)
+            .post(requestBody)
             .build()
 
         val failMsg = "Error: API call failed"
-        val unexpectedCode = "Error: Unexpected code"
+        val unexpectedCode = "Error: Unexpected response"
 
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
@@ -241,14 +255,9 @@ class UploadActivity : AppCompatActivity() {
                         makeToast(unexpectedCode)
                         throw IOException("Unexpected code $response")
                     }
-
-                    for ((name, value) in response.headers) {
-                        Log.d("API headers detail", "$name: $value")
-                    }
                     val responseBody = response.body!!.string()
                     Log.d("API body", responseBody)
-                    val intent = Intent(this@UploadActivity, SuccessActivity::class.java)
-                    intent.putExtra("apiResponseBody", responseBody)
+                    val intent = Intent(this@UploadActivity, CameraActivity::class.java)
                     startActivity(intent)
                 }
             }
@@ -284,7 +293,6 @@ class UploadActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "UploadActivity"
-        private const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS"
         private const val REQUEST_CODE_PERMISSIONS = 10
         private val REQUIRED_PERMISSIONS =
             mutableListOf (

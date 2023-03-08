@@ -33,6 +33,7 @@
         android:id="@+id/apiResponse"
         android:layout_width="370dp"
         android:layout_height="501dp"
+        android:scrollbars="vertical"
         app:layout_constraintBottom_toTopOf="@+id/backButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.487"
