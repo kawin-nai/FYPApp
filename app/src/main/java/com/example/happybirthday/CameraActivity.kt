@@ -107,7 +107,8 @@ class CameraActivity : AppCompatActivity() {
                     it.setAnalyzer(cameraExecutor, FaceAnalyzer(lifecycle, overlay))
                 }
 
-            imageCapture = ImageCapture.Builder().setTargetResolution(Size(720, 960)).build()
+//            imageCapture = ImageCapture.Builder().setTargetResolution(Size(720, 960)).build()
+            imageCapture = ImageCapture.Builder().build()
 
             try {
                 // Unbind use cases before rebinding
@@ -256,7 +257,7 @@ class CameraActivity : AppCompatActivity() {
                 turnOnPreview()
                 response.use {
                     if (!response.isSuccessful){
-                        Log.d("API call failed", "$response")
+                        Log.d("API call failed", response.body!!.string())
                         makeToast(unexpectedCode)
                         throw IOException("Unexpected response $response")
                     }
@@ -309,7 +310,8 @@ class CameraActivity : AppCompatActivity() {
         private const val TAG = "CameraActivity"
         private const val REQUEST_CODE_PERMISSIONS = 10
 //        private const val API_URL = "https://gcloud-container-nomount-real-xpp4wivu4q-de.a.run.app/verifyfromdb"
-        private const val API_URL = "https://gcloud-container-nomount-real-resnet-xpp4wivu4q-de.a.run.app/verifyfromdb"
+//        private const val API_URL = "https://gcloud-container-nomount-real-resnet-xpp4wivu4q-de.a.run.app/verifyfromdb"
+        private const val API_URL = "https://gcloud-container-nomount-real-resnet-senet-xpp4wivu4q-de.a.run.app/verifyfromdb"
         private val REQUIRED_PERMISSIONS =
             mutableListOf (
                 Manifest.permission.CAMERA,

@@ -93,7 +93,8 @@ class UploadActivity : AppCompatActivity() {
                     it.setSurfaceProvider(viewBinding.viewFinder.surfaceProvider)
                 }
 
-            imageCapture = ImageCapture.Builder().setTargetResolution(Size(720, 960)).build()
+//            imageCapture = ImageCapture.Builder().setTargetResolution(Size(720, 960)).build()
+            imageCapture = ImageCapture.Builder().build()
 
             try {
                 // Unbind use cases before rebinding
@@ -216,7 +217,8 @@ class UploadActivity : AppCompatActivity() {
             .set(data)
             .addOnSuccessListener {
                 Log.d("Uploaded to Firestore $TAG", "DocumentSnapshot added")
-                callApi("https://gcloud-container-nomount-real-resnet-xpp4wivu4q-de.a.run.app/uploadtodb/$fileName")
+                callApi("https://gcloud-container-nomount-real-resnet-senet-xpp4wivu4q-de.a.run.app/uploadtodb/$fileName")
+//                callApi("https://gcloud-container-nomount-real-resnet-xpp4wivu4q-de.a.run.app/uploadtodb/$fileName")
             }
             .addOnFailureListener { e ->
                 Log.w("Firestore upload error $TAG", "Error adding document", e)
