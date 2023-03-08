@@ -29,6 +29,7 @@ import java.io.File
 import java.io.IOException
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 // todo: alternatively, use on-device ML to get embeddings and call the API with the embeddings
 
@@ -43,7 +44,8 @@ class CameraActivity : AppCompatActivity() {
     private val db = Firebase.firestore
     private lateinit var overlay: Overlay
 
-    private val client = OkHttpClient()
+    private val client = OkHttpClient.Builder().connectTimeout(10, TimeUnit.SECONDS)
+        .writeTimeout(10, TimeUnit.SECONDS).readTimeout(10, TimeUnit.SECONDS).build()
     private var cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -107,8 +109,8 @@ class CameraActivity : AppCompatActivity() {
                     it.setAnalyzer(cameraExecutor, FaceAnalyzer(lifecycle, overlay))
                 }
 
-//            imageCapture = ImageCapture.Builder().setTargetResolution(Size(720, 960)).build()
-            imageCapture = ImageCapture.Builder().build()
+            imageCapture = ImageCapture.Builder().setTargetResolution(Size(1200, 1600)).build()
+//            imageCapture = ImageCapture.Builder().build()
 
             try {
                 // Unbind use cases before rebinding
@@ -218,7 +220,7 @@ class CameraActivity : AppCompatActivity() {
     }
 
     private fun uploadToFirestoreAndCallInputApi(downloadedURL: String) {
-        Log.d("Upload to Firestore", downloadedURL)
+//        Log.d("Upload to Firestore", downloadedURL)
         val data = hashMapOf(
             "image_name" to "input.jpg",
             "image_url" to downloadedURL

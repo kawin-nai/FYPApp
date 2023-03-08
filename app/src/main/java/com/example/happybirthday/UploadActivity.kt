@@ -25,6 +25,7 @@ import okhttp3.*
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.ExecutorService
+import java.util.concurrent.TimeUnit
 
 
 // TODO : Add face detection before upload
@@ -39,7 +40,8 @@ class UploadActivity : AppCompatActivity() {
     private var storageRef = storage.reference
     private val db = Firebase.firestore
 
-    private val client = OkHttpClient()
+    private val client = OkHttpClient.Builder().connectTimeout(10, TimeUnit.SECONDS)
+        .writeTimeout(10, TimeUnit.SECONDS).readTimeout(10, TimeUnit.SECONDS).build()
     private var cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -93,8 +95,8 @@ class UploadActivity : AppCompatActivity() {
                     it.setSurfaceProvider(viewBinding.viewFinder.surfaceProvider)
                 }
 
-//            imageCapture = ImageCapture.Builder().setTargetResolution(Size(720, 960)).build()
-            imageCapture = ImageCapture.Builder().build()
+            imageCapture = ImageCapture.Builder().setTargetResolution(Size(1200, 1600)).build()
+//            imageCapture = ImageCapture.Builder().build()
 
             try {
                 // Unbind use cases before rebinding
