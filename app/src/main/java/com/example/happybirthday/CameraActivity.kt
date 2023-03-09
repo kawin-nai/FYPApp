@@ -23,11 +23,9 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
 import com.google.gson.Gson
-import com.google.mlkit.vision.face.FaceDetector
 import okhttp3.*
 import java.io.File
 import java.io.IOException
-import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
@@ -118,7 +116,7 @@ class CameraActivity : AppCompatActivity() {
 
                 // Bind use cases to camera
                 val camera = cameraProvider.bindToLifecycle(
-                    this, cameraSelector, preview, imageCapture, analysisUseCase)
+                    this, cameraSelector, preview, imageCapture)
 
                 // Get the CameraControl instance from camera
                 val cameraControl = camera.cameraControl
@@ -240,12 +238,26 @@ class CameraActivity : AppCompatActivity() {
 
     private fun callVerifyApi() {
         makeToast("Verifying")
+
+        val cameraMessage  = if (cameraSelector == CameraSelector.DEFAULT_BACK_CAMERA) {
+            "back"
+        } else {
+            "front"
+        }
+
+        val url: HttpUrl = HttpUrl.Builder()
+            .scheme("https")
+            .host(API_HOST)
+            .addPathSegment("verifyfromdb")
+            .addQueryParameter("camera", cameraMessage)
+            .build()
+
         val request = Request.Builder()
-            .url(API_URL)
+            .url(url)
             .build()
 
         val failMsg = "Error: API call failed"
-        val unexpectedCode = "Error: Face not verified"
+        val unexpectedCode = "Error: Exception while processing input"
 
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
@@ -273,7 +285,7 @@ class CameraActivity : AppCompatActivity() {
                         startActivity(intent)
                     }
                     else {
-                        makeToast("Face Unknown")
+                        makeToast("Face not verified")
                     }
                 }
             }
@@ -313,7 +325,9 @@ class CameraActivity : AppCompatActivity() {
         private const val REQUEST_CODE_PERMISSIONS = 10
 //        private const val API_URL = "https://gcloud-container-nomount-real-xpp4wivu4q-de.a.run.app/verifyfromdb"
 //        private const val API_URL = "https://gcloud-container-nomount-real-resnet-xpp4wivu4q-de.a.run.app/verifyfromdb"
-        private const val API_URL = "https://gcloud-container-nomount-real-resnet-senet-xpp4wivu4q-de.a.run.app/verifyfromdb"
+//        private const val API_URL = "https://gcloud-container-nomount-real-resnet-senet-xpp4wivu4q-de.a.run.app/verifyfromdb"
+//        private const val API_HOST = "gcloud-container-nomount-real-resnet-senet-xpp4wivu4q-de.a.run.app"
+        private const val API_HOST = "gcloud-container-nomount-real-resnet-v2-xpp4wivu4q-de.a.run.app"
         private val REQUIRED_PERMISSIONS =
             mutableListOf (
                 Manifest.permission.CAMERA,
