@@ -14,6 +14,7 @@ class SuccessActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val binding = ActivitySuccessBinding.inflate(layoutInflater)
+
         setContentView(binding.root)
         binding.backButton.setOnClickListener{
             val intent = Intent(this, CameraActivity::class.java)
