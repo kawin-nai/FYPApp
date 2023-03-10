@@ -9,6 +9,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.happybirthday.databinding.ActivitySuccessBinding
 import com.google.gson.Gson
 
+//    TODO: Change distance to role or add role field
+//    TODO: Change image depending on person
 class SuccessActivity : AppCompatActivity() {
 
     private val gson = Gson()
@@ -50,7 +52,7 @@ class SuccessActivity : AppCompatActivity() {
 
     private fun postToList(faceList: ArrayList<FaceDetail>) {
         for (i in faceList) {
-            addToList(i.person_name, "Student", R.mipmap.ic_new_launcher_round)
+            addToList(i.person_name, i.distance.toString(), R.mipmap.ic_new_launcher_round)
         }
     }
 }
