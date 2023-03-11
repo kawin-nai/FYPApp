@@ -6,7 +6,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.net.toUri
 import androidx.recyclerview.widget.RecyclerView
+import coil.load
 import org.w3c.dom.Text
 
 class RecycleAdapter(private val context: Context,
@@ -37,7 +39,13 @@ class RecycleAdapter(private val context: Context,
         holder.nameView.text = names[position]
         holder.roleView.text = roles[position]
         holder.distanceView.text = distances[position]
-        bindImage(holder.imgView, images[position])
+
+        val imgUri = images[position].toUri().buildUpon().scheme("https").build()
+        holder.imgView.load(imgUri) {
+            placeholder(R.drawable.loading_animation)
+            error(R.drawable.ic_broken_image)
+        }
+//        bindImage(holder.imgView, images[position])
 //        holder.imgView.setImageResource(images[position])
     }
 }

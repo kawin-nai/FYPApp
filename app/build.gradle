@@ -16,8 +16,12 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
+    dataBinding {
+        enabled = true
+    }
     buildFeatures {
         viewBinding true
+        dataBinding true
     }
     buildTypes {
         release {
@@ -36,6 +40,7 @@ android {
     packagingOptions {
         resources.excludes.add("META-INF/*")
     }
+
 }
 
 dependencies {
