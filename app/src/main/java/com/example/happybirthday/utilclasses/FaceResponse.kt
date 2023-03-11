@@ -1,4 +1,4 @@
-package com.example.happybirthday
+package com.example.happybirthday.utilclasses
 
 class FaceVerificationResponse (
     val content: ArrayList<FaceDetail>,

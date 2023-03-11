@@ -29,7 +29,7 @@
             android:name=".UploadActivity"
             android:exported="false" />
         <activity
-            android:name=".FaceSuccess"
+            android:name=".ui.main.FaceSuccess"
             android:exported="false"
             android:label="@string/title_activity_face_success"
             android:theme="@style/Theme.HappyBirthday.NoActionBar" />

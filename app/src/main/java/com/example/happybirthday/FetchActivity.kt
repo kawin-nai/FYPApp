@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Button
 import android.widget.TextView
+import com.example.happybirthday.utilclasses.CurrencyResponse
 import com.google.gson.Gson
 import java.io.InputStreamReader
 import java.net.URL

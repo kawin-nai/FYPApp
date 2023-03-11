@@ -2,11 +2,12 @@ package com.example.happybirthday
 
 import android.content.Intent
 import android.os.Bundle
-import android.text.method.ScrollingMovementMethod
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.happybirthday.adapters.RecycleAdapter
 import com.example.happybirthday.databinding.ActivitySuccessBinding
+import com.example.happybirthday.utilclasses.FaceDetail
+import com.example.happybirthday.utilclasses.FaceVerificationResponse
 import com.google.gson.Gson
 
 //    TODO: Change distance to role or add role field

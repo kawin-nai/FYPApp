@@ -19,6 +19,9 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.happybirthday.databinding.ActivityCameraBinding
+import com.example.happybirthday.faceanalyzer.FaceAnalyzer
+import com.example.happybirthday.faceanalyzer.Overlay
+import com.example.happybirthday.utilclasses.FaceVerificationResponse
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
@@ -101,11 +104,11 @@ class CameraActivity : AppCompatActivity() {
                     it.setSurfaceProvider(viewBinding.viewFinder.surfaceProvider)
                 }
 
-            val analysisUseCase = ImageAnalysis.Builder()
-                .build()
-                .also {
-                    it.setAnalyzer(cameraExecutor, FaceAnalyzer(lifecycle, overlay))
-                }
+//            val analysisUseCase = ImageAnalysis.Builder()
+//                .build()
+//                .also {
+//                    it.setAnalyzer(cameraExecutor, FaceAnalyzer(lifecycle, overlay))
+//                }
 
             imageCapture = ImageCapture.Builder().setTargetResolution(Size(1200, 1600)).build()
 //            imageCapture = ImageCapture.Builder().build()

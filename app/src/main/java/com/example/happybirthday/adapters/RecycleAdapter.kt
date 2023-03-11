@@ -1,4 +1,4 @@
-package com.example.happybirthday
+package com.example.happybirthday.adapters
 
 import android.content.Context
 import android.view.LayoutInflater
@@ -9,7 +9,7 @@ import android.widget.TextView
 import androidx.core.net.toUri
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
-import org.w3c.dom.Text
+import com.example.happybirthday.R
 
 class RecycleAdapter(private val context: Context,
                      private var names: List<String>,

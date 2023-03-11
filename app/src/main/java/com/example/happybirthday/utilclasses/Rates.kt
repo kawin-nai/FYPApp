@@ -1,4 +1,4 @@
-package com.example.happybirthday
+package com.example.happybirthday.utilclasses
 
 class Rates (
     var THB: Double,

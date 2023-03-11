@@ -1,4 +1,4 @@
-package com.example.happybirthday
+package com.example.happybirthday.adapters
 
 import android.widget.ImageView
 import androidx.core.net.toUri
