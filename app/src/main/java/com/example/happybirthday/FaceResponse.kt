@@ -9,4 +9,6 @@ class FaceVerificationResponse (
 data class FaceDetail(
     val distance: Double,
     val person_name: String,
+    val role: String,
+    val face_url: String,
 )

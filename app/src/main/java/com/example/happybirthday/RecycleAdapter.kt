@@ -7,16 +7,19 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import org.w3c.dom.Text
 
 class RecycleAdapter(private val context: Context,
                      private var names: List<String>,
                      private var roles: List<String>,
+                     private var distances: List<String>,
                      private var images: List<Int>,
                      ) : RecyclerView.Adapter<RecycleAdapter.ViewHolder>() {
 
     class ViewHolder(private val view: View): RecyclerView.ViewHolder(view) {
         val nameView: TextView = view.findViewById(R.id.person_name)
         val roleView: TextView = view.findViewById(R.id.person_role)
+        val distanceView: TextView = view.findViewById(R.id.person_role)
         val imgView: ImageView = view.findViewById(R.id.iv_image)
     }
 
@@ -33,6 +36,7 @@ class RecycleAdapter(private val context: Context,
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.nameView.text = names[position]
         holder.roleView.text = roles[position]
+        holder.distanceView.text = distances[position]
         holder.imgView.setImageResource(images[position])
     }
 }

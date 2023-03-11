@@ -72,4 +72,7 @@ dependencies {
     implementation "com.squareup.okhttp3:okhttp:4.10.0"
     implementation "com.google.mlkit:face-detection:16.1.5"
 
+    // Coil
+    implementation "io.coil-kt:coil:1.1.1"
+
 }

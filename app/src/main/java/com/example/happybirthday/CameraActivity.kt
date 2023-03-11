@@ -247,7 +247,8 @@ class CameraActivity : AppCompatActivity() {
 
         val url: HttpUrl = HttpUrl.Builder()
             .scheme("https")
-            .host(API_HOST)
+//            .host(API_HOST)
+            .host(API_LOCALHOST)
             .addPathSegment("verifyfromdb")
             .addQueryParameter("camera", cameraMessage)
             .build()
@@ -328,6 +329,7 @@ class CameraActivity : AppCompatActivity() {
 //        private const val API_URL = "https://gcloud-container-nomount-real-resnet-senet-xpp4wivu4q-de.a.run.app/verifyfromdb"
 //        private const val API_HOST = "gcloud-container-nomount-real-resnet-senet-xpp4wivu4q-de.a.run.app"
         private const val API_HOST = "gcloud-container-nomount-real-resnet-v2-xpp4wivu4q-de.a.run.app"
+        private const val API_LOCALHOST = "10.0.2.2"
         private val REQUIRED_PERMISSIONS =
             mutableListOf (
                 Manifest.permission.CAMERA,

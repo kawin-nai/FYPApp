@@ -16,6 +16,7 @@ class SuccessActivity : AppCompatActivity() {
     private val gson = Gson()
     private var namesList = mutableListOf<String>()
     private var rolesList = mutableListOf<String>()
+    private var distancesList = mutableListOf<String>()
     private var imagesList = mutableListOf<Int>()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,7 +28,7 @@ class SuccessActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-        binding.rvRecyclerView.adapter = RecycleAdapter(this, namesList, rolesList, imagesList)
+        binding.rvRecyclerView.adapter = RecycleAdapter(this, namesList, rolesList, distancesList, imagesList)
         binding.rvRecyclerView.setHasFixedSize(true)
 
         val apiResponseBody = intent.getStringExtra("apiResponseBody")
@@ -36,23 +37,24 @@ class SuccessActivity : AppCompatActivity() {
         postToList(jsonResponse.content)
 
         Log.d("JSON Response", jsonResponse.toString())
-        binding.apiResponse.movementMethod = ScrollingMovementMethod()
-        binding.apiResponse.text = apiResponseBody
+//        binding.apiResponse.movementMethod = ScrollingMovementMethod()
+//        binding.apiResponse.text = apiResponseBody
         binding.uploadButton.setOnClickListener {
             val intent = Intent(this, UploadActivity::class.java)
             startActivity(intent)
         }
     }
 
-    private fun addToList(name: String, role: String, image: Int) {
+    private fun addToList(name: String, role: String, distance:String, image: Int) {
         namesList.add(name)
         rolesList.add(role)
         imagesList.add(image)
+        distancesList.add(distance)
     }
 
     private fun postToList(faceList: ArrayList<FaceDetail>) {
         for (i in faceList) {
-            addToList(i.person_name, i.distance.toString(), R.mipmap.ic_new_launcher_round)
+            addToList(i.person_name, "Student", i.distance.toString(), R.mipmap.ic_new_launcher_round)
         }
     }
 }
