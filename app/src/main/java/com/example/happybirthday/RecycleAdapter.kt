@@ -13,7 +13,7 @@ class RecycleAdapter(private val context: Context,
                      private var names: List<String>,
                      private var roles: List<String>,
                      private var distances: List<String>,
-                     private var images: List<Int>,
+                     private var images: List<String>,
                      ) : RecyclerView.Adapter<RecycleAdapter.ViewHolder>() {
 
     class ViewHolder(private val view: View): RecyclerView.ViewHolder(view) {
@@ -37,6 +37,7 @@ class RecycleAdapter(private val context: Context,
         holder.nameView.text = names[position]
         holder.roleView.text = roles[position]
         holder.distanceView.text = distances[position]
-        holder.imgView.setImageResource(images[position])
+        bindImage(holder.imgView, images[position])
+//        holder.imgView.setImageResource(images[position])
     }
 }

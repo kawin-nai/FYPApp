@@ -41,6 +41,7 @@ android {
 dependencies {
     implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.5.1'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1'
+    implementation 'androidx.databinding:databinding-common:7.1.2'
 
     def camerax_version = "1.2.1"
     implementation "androidx.camera:camera-core:${camerax_version}"

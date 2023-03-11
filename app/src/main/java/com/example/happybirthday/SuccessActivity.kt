@@ -17,7 +17,7 @@ class SuccessActivity : AppCompatActivity() {
     private var namesList = mutableListOf<String>()
     private var rolesList = mutableListOf<String>()
     private var distancesList = mutableListOf<String>()
-    private var imagesList = mutableListOf<Int>()
+    private var imagesList = mutableListOf<String>()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val binding = ActivitySuccessBinding.inflate(layoutInflater)
@@ -45,7 +45,7 @@ class SuccessActivity : AppCompatActivity() {
         }
     }
 
-    private fun addToList(name: String, role: String, distance:String, image: Int) {
+    private fun addToList(name: String, role: String, distance:String, image: String) {
         namesList.add(name)
         rolesList.add(role)
         distancesList.add(distance)
@@ -55,7 +55,7 @@ class SuccessActivity : AppCompatActivity() {
     private fun postToList(faceList: ArrayList<FaceDetail>) {
         for (i in faceList) {
             if (i.distance < 0.5)
-                addToList(i.person_name, "Student", i.distance.toString(), R.mipmap.ic_new_launcher_round)
+                addToList(i.person_name, i.role, i.distance.toString(), i.face_url)
         }
     }
 }
