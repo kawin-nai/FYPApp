@@ -19,7 +19,7 @@ class RecycleAdapter(private val context: Context,
     class ViewHolder(private val view: View): RecyclerView.ViewHolder(view) {
         val nameView: TextView = view.findViewById(R.id.person_name)
         val roleView: TextView = view.findViewById(R.id.person_role)
-        val distanceView: TextView = view.findViewById(R.id.person_role)
+        val distanceView: TextView = view.findViewById(R.id.person_distance)
         val imgView: ImageView = view.findViewById(R.id.iv_image)
     }
 

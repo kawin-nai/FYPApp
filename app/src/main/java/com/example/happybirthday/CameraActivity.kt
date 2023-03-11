@@ -247,8 +247,8 @@ class CameraActivity : AppCompatActivity() {
 
         val url: HttpUrl = HttpUrl.Builder()
             .scheme("https")
-//            .host(API_HOST)
-            .host(API_LOCALHOST)
+            .host(API_HOST)
+//            .host(API_LOCALHOST)
             .addPathSegment("verifyfromdb")
             .addQueryParameter("camera", cameraMessage)
             .build()

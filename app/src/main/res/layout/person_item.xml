@@ -47,7 +47,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="10dp"
                 android:text="Role"
-                android:textSize="20sp"/>
+                android:textSize="15sp"/>
 
             <TextView
                 android:id="@+id/person_distance"

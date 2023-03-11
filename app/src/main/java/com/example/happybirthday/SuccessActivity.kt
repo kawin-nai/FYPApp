@@ -48,13 +48,14 @@ class SuccessActivity : AppCompatActivity() {
     private fun addToList(name: String, role: String, distance:String, image: Int) {
         namesList.add(name)
         rolesList.add(role)
-        imagesList.add(image)
         distancesList.add(distance)
+        imagesList.add(image)
     }
 
     private fun postToList(faceList: ArrayList<FaceDetail>) {
         for (i in faceList) {
-            addToList(i.person_name, "Student", i.distance.toString(), R.mipmap.ic_new_launcher_round)
+            if (i.distance < 0.5)
+                addToList(i.person_name, "Student", i.distance.toString(), R.mipmap.ic_new_launcher_round)
         }
     }
 }
