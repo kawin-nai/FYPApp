@@ -219,7 +219,7 @@ class UploadActivity : AppCompatActivity() {
             .set(data)
             .addOnSuccessListener {
                 Log.d("Uploaded to Firestore $TAG", "DocumentSnapshot added")
-                callApi("https://gcloud-container-nomount-real-resnet-senet-xpp4wivu4q-de.a.run.app/uploadtodb/$fileName")
+                callApi(fileName)
 //                callApi("https://gcloud-container-nomount-real-resnet-xpp4wivu4q-de.a.run.app/uploadtodb/$fileName")
             }
             .addOnFailureListener { e ->
@@ -227,17 +227,31 @@ class UploadActivity : AppCompatActivity() {
             }
     }
 
-    private fun callApi(apiUrl: String) {
+    private fun callApi(fileName: String) {
         makeToast("Checking face")
+        val cameraMessage  = if (cameraSelector == CameraSelector.DEFAULT_BACK_CAMERA) {
+            "back"
+        } else {
+            "front"
+        }
+
+        val url: HttpUrl = HttpUrl.Builder()
+            .scheme("https")
+            .host(API_HOST)
+            .addPathSegment("uploadtodb")
+            .addPathSegment(fileName)
+            .addQueryParameter("camera", cameraMessage)
+            .build()
+
         val requestBody = FormBody.Builder()
             .build()
         val request = Request.Builder()
-            .url(apiUrl)
+            .url(url)
             .post(requestBody)
             .build()
 
         val failMsg = "Error: API call failed"
-        val unexpectedCode = "Error: Unexpected response"
+        val unexpectedCode = "Error: Exception while processing input"
 
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
@@ -294,6 +308,7 @@ class UploadActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "UploadActivity"
         private const val REQUEST_CODE_PERMISSIONS = 10
+        private const val API_HOST = "gcloud-container-nomount-real-resnet-v2-xpp4wivu4q-de.a.run.app"
         private val REQUIRED_PERMISSIONS =
             mutableListOf (
                 Manifest.permission.CAMERA,

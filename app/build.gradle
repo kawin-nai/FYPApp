@@ -16,8 +16,12 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
+    dataBinding {
+        enabled = true
+    }
     buildFeatures {
         viewBinding true
+        dataBinding true
     }
     buildTypes {
         release {
@@ -36,11 +40,13 @@ android {
     packagingOptions {
         resources.excludes.add("META-INF/*")
     }
+
 }
 
 dependencies {
     implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.5.1'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1'
+    implementation 'androidx.databinding:databinding-common:7.1.2'
 
     def camerax_version = "1.2.1"
     implementation "androidx.camera:camera-core:${camerax_version}"
@@ -71,5 +77,8 @@ dependencies {
 
     implementation "com.squareup.okhttp3:okhttp:4.10.0"
     implementation "com.google.mlkit:face-detection:16.1.5"
+
+    // Coil
+    implementation "io.coil-kt:coil:1.1.1"
 
 }

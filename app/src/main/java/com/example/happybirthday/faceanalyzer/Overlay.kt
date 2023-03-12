@@ -1,7 +1,6 @@
-package com.example.happybirthday
+package com.example.happybirthday.faceanalyzer
 
 import android.content.Context
-import android.content.res.Configuration
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
@@ -39,15 +38,6 @@ class Overlay @JvmOverloads constructor(
         // Need to swap width and height when in portrait, since camera's natural orientation is landscape.
         previewWidth = size.width
         previewHeight = size.height
-//        if(orientation == Configuration.ORIENTATION_LANDSCAPE) {
-//            previewWidth = size.width
-//            previewHeight = size.height
-//        }
-//        else
-//        {
-//            previewWidth = size.height
-//            previewHeight = size.width
-//        }
     }
     fun setFaces(faceList: List<Face>)
     {

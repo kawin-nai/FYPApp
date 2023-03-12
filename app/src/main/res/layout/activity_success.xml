@@ -7,7 +7,7 @@
     tools:context=".SuccessActivity">
 
     <TextView
-        android:id="@+id/textView"
+        android:id="@+id/loginSuccess"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Login Success"
@@ -38,7 +38,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.487"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView"
+        app:layout_constraintTop_toBottomOf="@+id/loginSuccess"
         app:layout_constraintVertical_bias="0.196" />
 
     <Button
@@ -50,4 +50,16 @@
         android:text="Upload"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_recyclerView"
+        android:layout_width="380dp"
+        android:layout_height="423dp"
+        android:scrollbars="vertical"
+        app:layoutManager="LinearLayoutManager"
+        app:layout_constraintBottom_toTopOf="@id/uploadButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/loginSuccess"
+        tools:listitem="@layout/person_item" />
 </androidx.constraintlayout.widget.ConstraintLayout>
