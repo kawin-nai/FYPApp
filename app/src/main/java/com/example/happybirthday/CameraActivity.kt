@@ -52,6 +52,7 @@ class CameraActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         viewBinding = ActivityCameraBinding.inflate(layoutInflater)
         setContentView(viewBinding.root)
+        cameraExecutor = Executors.newSingleThreadExecutor()
         overlay = Overlay(this)
         val layoutOverlay = ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,

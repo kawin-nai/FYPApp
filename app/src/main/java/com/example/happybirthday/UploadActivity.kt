@@ -12,6 +12,9 @@ import android.util.Log
 import android.util.Size
 import android.view.MotionEvent
 import android.view.View
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import android.widget.Spinner
 import android.widget.Toast
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
@@ -25,20 +28,22 @@ import okhttp3.*
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 
 // TODO : Add face detection before upload
 // TODO : Add multiple stages of face upload
 // TODO : Add auth before upload
-class UploadActivity : AppCompatActivity() {
+class UploadActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
     private lateinit var viewBinding: ActivityUploadBinding
 
     private var imageCapture: ImageCapture? = null
-    private lateinit var cameraExecutor: ExecutorService
+    private var cameraExecutor: ExecutorService = Executors.newSingleThreadExecutor()
     private val storage = Firebase.storage
     private var storageRef = storage.reference
     private val db = Firebase.firestore
+    private lateinit var role: String
 
     private val client = OkHttpClient.Builder().connectTimeout(10, TimeUnit.SECONDS)
         .writeTimeout(10, TimeUnit.SECONDS).readTimeout(10, TimeUnit.SECONDS).build()
@@ -49,7 +54,7 @@ class UploadActivity : AppCompatActivity() {
         viewBinding = ActivityUploadBinding.inflate(layoutInflater)
         setContentView(viewBinding.root)
 
-        if (allPermissionsGranted()){
+        if (allPermissionsGranted()) {
             startCamera()
         } else {
             ActivityCompat.requestPermissions(
@@ -74,11 +79,29 @@ class UploadActivity : AppCompatActivity() {
             val inputName = viewBinding.personName.text.toString()
             if (inputName.isEmpty()) {
                 viewBinding.personName.error = "This field cannot be empty"
-            }
-            else {
+            } else {
                 takePhoto()
             }
         }
+        val spinner: Spinner = findViewById(R.id.spinner)
+        ArrayAdapter.createFromResource(
+            this,
+            R.array.roles_array,
+            android.R.layout.simple_spinner_item
+        ).also { adapter ->
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            spinner.adapter = adapter
+        }
+        spinner.onItemSelectedListener = this
+    }
+
+    override fun onItemSelected(parent: AdapterView<*>, view: View?, pos: Int, id: Long) {
+        role = parent.getItemAtPosition(pos) as String
+    }
+
+    override fun onNothingSelected(parent: AdapterView<*>) {
+        // Another interface callback
+        role = parent.getItemAtPosition(0) as String
     }
 
     private fun startCamera () {
@@ -241,6 +264,7 @@ class UploadActivity : AppCompatActivity() {
             .addPathSegment("uploadtodb")
             .addPathSegment(fileName)
             .addQueryParameter("camera", cameraMessage)
+            .addQueryParameter("role", role)
             .build()
 
         val requestBody = FormBody.Builder()

@@ -68,10 +68,11 @@ class SuccessActivity : AppCompatActivity() {
 
     private fun postToList(faceList: ArrayList<FaceDetail>) {
         for (i in faceList) {
+            val personName = i.person_name.replace('_', ' ')
             if (i.distance < 0.5)
-                addToList(i.person_name , i.role, i.distance.toString(), i.face_url)
+                addToList(personName , i.role, i.distance.toString(), i.face_url)
             else
-                addToFakeList(i.person_name, "Not a match", i.distance.toString(), i.face_url)
+                addToFakeList(personName, "Not a match", i.distance.toString(), i.face_url)
         }
     }
 }
