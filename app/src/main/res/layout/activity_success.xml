@@ -41,6 +41,18 @@
         app:layout_constraintTop_toBottomOf="@+id/loginSuccess"
         app:layout_constraintVertical_bias="0.196" />
 
+    <TextView
+        android:id="@+id/otherFaces"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Others"
+        android:textSize="24sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.317" />
+
     <Button
         android:id="@+id/uploadButton"
         android:layout_width="wrap_content"
@@ -54,12 +66,28 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_recyclerView"
         android:layout_width="380dp"
-        android:layout_height="423dp"
+        android:layout_height="110dp"
         android:scrollbars="vertical"
         app:layoutManager="LinearLayoutManager"
         app:layout_constraintBottom_toTopOf="@id/uploadButton"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.516"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/loginSuccess"
+        app:layout_constraintVertical_bias="0.022"
+        tools:listitem="@layout/person_item" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_otherView"
+        android:layout_width="380dp"
+        android:layout_height="329dp"
+        android:scrollbars="vertical"
+        app:layoutManager="LinearLayoutManager"
+        app:layout_constraintBottom_toTopOf="@id/uploadButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.483"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/loginSuccess"
+        app:layout_constraintVertical_bias="0.816"
         tools:listitem="@layout/person_item" />
 </androidx.constraintlayout.widget.ConstraintLayout>

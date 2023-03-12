@@ -19,6 +19,10 @@ class SuccessActivity : AppCompatActivity() {
     private var rolesList = mutableListOf<String>()
     private var distancesList = mutableListOf<String>()
     private var imagesList = mutableListOf<String>()
+    private var fakeNamesList = mutableListOf<String>()
+    private var fakeRolesList = mutableListOf<String>()
+    private var fakeDistancesList = mutableListOf<String>()
+    private var fakeImagesList = mutableListOf<String>()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val binding = ActivitySuccessBinding.inflate(layoutInflater)
@@ -31,6 +35,8 @@ class SuccessActivity : AppCompatActivity() {
 
         binding.rvRecyclerView.adapter = RecycleAdapter(this, namesList, rolesList, distancesList, imagesList)
         binding.rvRecyclerView.setHasFixedSize(true)
+        binding.rvOtherView.adapter = RecycleAdapter(this, fakeNamesList, fakeRolesList, fakeDistancesList, fakeImagesList)
+        binding.rvOtherView.setHasFixedSize(true)
 
         val apiResponseBody = intent.getStringExtra("apiResponseBody")
         val jsonResponse = gson.fromJson(apiResponseBody, FaceVerificationResponse::class.java)
@@ -53,10 +59,19 @@ class SuccessActivity : AppCompatActivity() {
         imagesList.add(image)
     }
 
+    private fun addToFakeList(name: String, role: String, distance:String, image: String) {
+        fakeNamesList.add(name)
+        fakeRolesList.add(role)
+        fakeDistancesList.add(distance)
+        fakeImagesList.add(image)
+    }
+
     private fun postToList(faceList: ArrayList<FaceDetail>) {
         for (i in faceList) {
             if (i.distance < 0.5)
-                addToList(i.person_name, i.role, i.distance.toString(), i.face_url)
+                addToList(i.person_name , i.role, i.distance.toString(), i.face_url)
+            else
+                addToFakeList(i.person_name, "Not a match", i.distance.toString(), i.face_url)
         }
     }
 }
