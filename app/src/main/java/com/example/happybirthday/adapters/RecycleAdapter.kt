@@ -1,6 +1,7 @@
 package com.example.happybirthday.adapters
 
 import android.content.Context
+import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,6 +10,7 @@ import android.widget.TextView
 import androidx.core.net.toUri
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
+import com.example.happybirthday.FullScreenImage
 import com.example.happybirthday.R
 
 class RecycleAdapter(private val context: Context,
@@ -45,7 +47,10 @@ class RecycleAdapter(private val context: Context,
             placeholder(R.drawable.loading_animation)
             error(R.drawable.ic_broken_image)
         }
-//        bindImage(holder.imgView, images[position])
-//        holder.imgView.setImageResource(images[position])
+        holder.imgView.setOnClickListener {
+            val intent = Intent(holder.itemView.context, FullScreenImage::class.java)
+            intent.putExtra("image_resource", imgUri.toString())
+            holder.itemView.context.startActivity(intent)
+        }
     }
 }
