@@ -12,6 +12,7 @@ import android.util.Size
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.webkit.MimeTypeMap
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
@@ -22,11 +23,14 @@ import com.example.happybirthday.databinding.ActivityCameraBinding
 import com.example.happybirthday.faceanalyzer.FaceAnalyzer
 import com.example.happybirthday.faceanalyzer.Overlay
 import com.example.happybirthday.utilclasses.FaceVerificationResponse
+import com.example.happybirthday.utilclasses.UploadUtility
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
 import com.google.gson.Gson
 import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.Executors
@@ -195,9 +199,14 @@ class CameraActivity : AppCompatActivity() {
                     val rootFilePath = "/storage/emulated/0/Pictures/FaceApp/"
                     val rawImagePath = "$name.jpg"
                     val justTakenFilePath = "$rootFilePath$rawImagePath"
-                    val file = Uri.fromFile(File(justTakenFilePath))
-                    val realRef = storageRef.child("application-data/input_faces/${file.lastPathSegment}")
-                    val uploadTask = realRef.putFile(file)
+                    val file = File(justTakenFilePath)
+                    val fileUri = Uri.fromFile(file)
+//                    callVerifyPostApi(file)
+
+
+
+                    val realRef = storageRef.child("application-data/input_faces/${fileUri.lastPathSegment}")
+                    val uploadTask = realRef.putFile(fileUri)
 
                     uploadTask.addOnFailureListener {
                         Log.d("Upload failed", it.toString())
@@ -297,6 +306,92 @@ class CameraActivity : AppCompatActivity() {
         })
     }
 
+
+    private fun getMimeType(file: File): String? {
+        var type: String? = null
+        val extension = MimeTypeMap.getFileExtensionFromUrl(file.path)
+        if (extension != null) {
+            type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension)
+        }
+        return type
+    }
+
+    private fun callVerifyPostApi(sourceFile: File) {
+        Thread {
+            Log.d("Enter thread", "Amazing")
+            makeToast("Verifying")
+
+            val cameraMessage  = if (cameraSelector == CameraSelector.DEFAULT_BACK_CAMERA) {
+                "back"
+            } else {
+                "front"
+            }
+
+            val mimeType = getMimeType(sourceFile);
+            if (mimeType == null) {
+                Log.e("file error", "Not able to get mime type")
+                makeToast("File Error")
+                return@Thread
+            }
+
+            val fileName = sourceFile.name
+
+            val requestBody: RequestBody =
+                MultipartBody.Builder().setType(MultipartBody.FORM)
+                    .addFormDataPart("image", fileName,sourceFile.asRequestBody(mimeType.toMediaTypeOrNull()))
+                    .build()
+
+            val url: HttpUrl = HttpUrl.Builder()
+                .scheme("http")
+//                .host(API_HOST)
+            .host(API_LOCALHOST)
+                .addPathSegment("verifyfrompost")
+                .addQueryParameter("camera", cameraMessage)
+                .build()
+
+            val request = Request.Builder()
+                .url(url)
+                .post(requestBody)
+                .build()
+
+            val failMsg = "Error: API call failed"
+            val unexpectedCode = "Error: Exception while processing input"
+
+            client.newCall(request).enqueue(object : Callback {
+                override fun onFailure(call: Call, e: IOException) {
+                    Log.d("API call invalid", e.toString())
+                    turnOnPreview()
+                    makeToast(failMsg)
+                }
+
+                override fun onResponse(call: Call, response: Response) {
+                    Log.d("API call valid", response.toString())
+                    turnOnPreview()
+                    response.use {
+                        if (!response.isSuccessful){
+                            Log.d("API call failed", response.body!!.string())
+                            makeToast(unexpectedCode)
+                            throw IOException("Unexpected response $response")
+                        }
+
+                        val responseBody = response.body!!.string()
+                        Log.d("API body", responseBody)
+                        val jsonResponse = gson.fromJson(responseBody, FaceVerificationResponse::class.java)
+                        if (jsonResponse.verified == "True") {
+                            val intent = Intent(this@CameraActivity, SuccessActivity::class.java)
+                            intent.putExtra("apiResponseBody", responseBody)
+                            startActivity(intent)
+                        }
+                        else {
+                            makeToast("Face not verified")
+                        }
+                    }
+                }
+            })
+        }.start()
+
+    }
+
     private fun makeToast(toastMsg: String) {
         runOnUiThread {
             Toast.makeText(baseContext, toastMsg, Toast.LENGTH_SHORT).show()
@@ -333,7 +428,7 @@ class CameraActivity : AppCompatActivity() {
 //        private const val API_URL = "https://gcloud-container-nomount-real-resnet-senet-xpp4wivu4q-de.a.run.app/verifyfromdb"
 //        private const val API_HOST = "gcloud-container-nomount-real-resnet-senet-xpp4wivu4q-de.a.run.app"
         private const val API_HOST = "gcloud-container-nomount-real-resnet-v2-xpp4wivu4q-de.a.run.app"
-        private const val API_LOCALHOST = "10.0.2.2"
+        private const val API_LOCALHOST = "192.168.1.125"
         private val REQUIRED_PERMISSIONS =
             mutableListOf (
                 Manifest.permission.CAMERA,
