@@ -1,6 +1,7 @@
 package com.example.happybirthday
 
 import android.Manifest
+import android.content.ContentResolver
 import android.content.ContentValues
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -28,9 +29,13 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
 import com.google.gson.Gson
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.internal.wait
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.Executors
@@ -201,30 +206,32 @@ class CameraActivity : AppCompatActivity() {
                     val justTakenFilePath = "$rootFilePath$rawImagePath"
                     val file = File(justTakenFilePath)
                     val fileUri = Uri.fromFile(file)
-//                    callVerifyPostApi(file)
+
+                    callVerifyPostApi(file)
 
 
 
-                    val realRef = storageRef.child("application-data/input_faces/${fileUri.lastPathSegment}")
-                    val uploadTask = realRef.putFile(fileUri)
 
-                    uploadTask.addOnFailureListener {
-                        Log.d("Upload failed", it.toString())
-                        makeToast("Upload failed")
-                        turnOnPreview()
-                    }.addOnSuccessListener {
-                        Log.d("Upload success", it.toString())
-                        realRef.downloadUrl.addOnSuccessListener { uri ->
-                            Log.d("Download URL", uri.toString())
-                            uploadToFirestoreAndCallInputApi(uri.toString())
-                        }
-                    }
+//                    val realRef = storageRef.child("application-data/input_faces/${fileUri.lastPathSegment}")
+//                    val uploadTask = realRef.putFile(fileUri)
+//
+//                    uploadTask.addOnFailureListener {
+//                        Log.d("Upload failed", it.toString())
+//                        makeToast("Upload failed")
+//                        turnOnPreview()
+//                    }.addOnSuccessListener {
+//                        Log.d("Upload success", it.toString())
+//                        realRef.downloadUrl.addOnSuccessListener { uri ->
+//                            Log.d("Download URL", uri.toString())
+//                            uploadToFirestoreAndCallInputApi(uri.toString())
+//                        }
+//                    }
 
-                    val uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-                    val selection = MediaStore.MediaColumns.DISPLAY_NAME + " = ?"
-                    val selectionArgs = arrayOf("input.jpg")
-                    resolver.delete(uri, selection, selectionArgs)
-                    Log.d("Deleted", "Deleted input.jpg from the gallery")
+//                    val uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+//                    val selection = MediaStore.MediaColumns.DISPLAY_NAME + " = ?"
+//                    val selectionArgs = arrayOf("input.jpg")
+//                    resolver.delete(uri, selection, selectionArgs)
+//                    Log.d("Deleted", "Deleted input.jpg from the gallery")
                 }
             }
         )
@@ -262,6 +269,7 @@ class CameraActivity : AppCompatActivity() {
             .scheme("https")
             .host(API_HOST)
 //            .host(API_LOCALHOST)
+//            .port(5000)
             .addPathSegment("verifyfromdb")
             .addQueryParameter("camera", cameraMessage)
             .build()
@@ -317,7 +325,8 @@ class CameraActivity : AppCompatActivity() {
     }
 
     private fun callVerifyPostApi(sourceFile: File) {
-        Thread {
+
+        GlobalScope.launch(Dispatchers.IO) {
             Log.d("Enter thread", "Amazing")
             makeToast("Verifying")
 
@@ -331,10 +340,12 @@ class CameraActivity : AppCompatActivity() {
             if (mimeType == null) {
                 Log.e("file error", "Not able to get mime type")
                 makeToast("File Error")
-                return@Thread
+                return@launch
             }
 
             val fileName = sourceFile.name
+            Log.d("post api filename", fileName)
+            Log.d("post api mimetype", mimeType)
 
             val requestBody: RequestBody =
                 MultipartBody.Builder().setType(MultipartBody.FORM)
@@ -342,9 +353,9 @@ class CameraActivity : AppCompatActivity() {
                     .build()
 
             val url: HttpUrl = HttpUrl.Builder()
-                .scheme("http")
-//                .host(API_HOST)
-            .host(API_LOCALHOST)
+                .scheme("https")
+                .host(API_HOST)
+//            .host(API_LOCALHOST)
                 .addPathSegment("verifyfrompost")
                 .addQueryParameter("camera", cameraMessage)
                 .build()
@@ -357,38 +368,34 @@ class CameraActivity : AppCompatActivity() {
             val failMsg = "Error: API call failed"
             val unexpectedCode = "Error: Exception while processing input"
 
-            client.newCall(request).enqueue(object : Callback {
-                override fun onFailure(call: Call, e: IOException) {
-                    Log.d("API call invalid", e.toString())
-                    turnOnPreview()
-                    makeToast(failMsg)
+            client.newCall(request).execute().use { response ->
+                if (!response.isSuccessful){
+                    Log.d("API call failed", response.body!!.string())
+                    makeToast(unexpectedCode)
                 }
-
-                override fun onResponse(call: Call, response: Response) {
-                    Log.d("API call valid", response.toString())
-                    turnOnPreview()
-                    response.use {
-                        if (!response.isSuccessful){
-                            Log.d("API call failed", response.body!!.string())
-                            makeToast(unexpectedCode)
-                            throw IOException("Unexpected response $response")
-                        }
-
-                        val responseBody = response.body!!.string()
-                        Log.d("API body", responseBody)
-                        val jsonResponse = gson.fromJson(responseBody, FaceVerificationResponse::class.java)
-                        if (jsonResponse.verified == "True") {
-                            val intent = Intent(this@CameraActivity, SuccessActivity::class.java)
-                            intent.putExtra("apiResponseBody", responseBody)
-                            startActivity(intent)
-                        }
-                        else {
-                            makeToast("Face not verified")
-                        }
+                else {
+                    val responseBody = response.body!!.string()
+                    Log.d("API body", responseBody)
+                    val jsonResponse = gson.fromJson(responseBody, FaceVerificationResponse::class.java)
+                    if (jsonResponse.verified == "True") {
+                        val intent = Intent(this@CameraActivity, SuccessActivity::class.java)
+                        intent.putExtra("apiResponseBody", responseBody)
+                        startActivity(intent)
+                    }
+                    else {
+                        makeToast("Face not verified")
                     }
                 }
-            })
-        }.start()
+            }
+            turnOnPreview()
+            val resolver = contentResolver
+            val uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+            val selection = MediaStore.MediaColumns.DISPLAY_NAME + " = ?"
+            val selectionArgs = arrayOf("input.jpg")
+            resolver.delete(uri, selection, selectionArgs)
+            Log.d("Deleted", "Deleted input.jpg from the gallery")
+
+        }
 
     }
 
@@ -428,7 +435,7 @@ class CameraActivity : AppCompatActivity() {
 //        private const val API_URL = "https://gcloud-container-nomount-real-resnet-senet-xpp4wivu4q-de.a.run.app/verifyfromdb"
 //        private const val API_HOST = "gcloud-container-nomount-real-resnet-senet-xpp4wivu4q-de.a.run.app"
         private const val API_HOST = "gcloud-container-nomount-real-resnet-v2-xpp4wivu4q-de.a.run.app"
-        private const val API_LOCALHOST = "192.168.1.125"
+        private const val API_LOCALHOST = "172.28.231.132"
         private val REQUIRED_PERMISSIONS =
             mutableListOf (
                 Manifest.permission.CAMERA,
