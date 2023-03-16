@@ -12,6 +12,7 @@ import android.util.Log
 import android.util.Size
 import android.view.MotionEvent
 import android.view.View
+import android.webkit.MimeTypeMap
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Spinner
@@ -21,10 +22,16 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.happybirthday.databinding.ActivityUploadBinding
+import com.example.happybirthday.utilclasses.FaceVerificationResponse
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.ExecutorService
@@ -205,26 +212,31 @@ class UploadActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
                     val rootFilePath = "/storage/emulated/0/Pictures/FaceApp/"
                     val rawImagePath = "$imageName.jpg"
                     val justTakenFilePath = "$rootFilePath$rawImagePath"
-                    val file = Uri.fromFile(File(justTakenFilePath))
-                    val realRef = storageRef.child("application-data/upload_faces/${file.lastPathSegment}")
-                    val uploadTask = realRef.putFile(file)
+                    val file = File(justTakenFilePath)
+                    val fileUri = Uri.fromFile(file)
 
-                    uploadTask.addOnFailureListener {
-                        Log.d("Upload failed", it.toString())
-                        makeToast("Upload failed")
-                        turnOnPreview()
-                    }.addOnSuccessListener {
-                        Log.d("Upload success", it.toString())
-                        makeToast("Upload success")
-                        realRef.downloadUrl.addOnSuccessListener { uri ->
-                            Log.d("Upload URL", uri.toString())
-                            uploadToFirestoreAndCallUploadApi(rawImagePath, uri.toString()) }
-                    }
-                    val uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-                    val selection = MediaStore.MediaColumns.DISPLAY_NAME + " = ?"
-                    val selectionArgs = arrayOf(rawImagePath)
-                    resolver.delete(uri, selection, selectionArgs)
-                    Log.d("Deleted", "Deleted $rawImagePath from the gallery")
+                    callUploadPostApi(file, rawImagePath)
+
+
+//                    val realRef = storageRef.child("application-data/upload_faces/${fileUri.lastPathSegment}")
+//                    val uploadTask = realRef.putFile(fileUri)
+//
+//                    uploadTask.addOnFailureListener {
+//                        Log.d("Upload failed", it.toString())
+//                        makeToast("Upload failed")
+//                        turnOnPreview()
+//                    }.addOnSuccessListener {
+//                        Log.d("Upload success", it.toString())
+//                        makeToast("Upload success")
+//                        realRef.downloadUrl.addOnSuccessListener { uri ->
+//                            Log.d("Upload URL", uri.toString())
+//                            uploadToFirestoreAndCallUploadApi(rawImagePath, uri.toString()) }
+//                    }
+//                    val uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+//                    val selection = MediaStore.MediaColumns.DISPLAY_NAME + " = ?"
+//                    val selectionArgs = arrayOf(rawImagePath)
+//                    resolver.delete(uri, selection, selectionArgs)
+//                    Log.d("Deleted", "Deleted $rawImagePath from the gallery")
 
                 }
             }
@@ -300,6 +312,86 @@ class UploadActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
                 }
             }
         })
+    }
+
+    private fun getMimeType(file: File): String? {
+        var type: String? = null
+        val extension = MimeTypeMap.getFileExtensionFromUrl(file.path)
+        if (extension != null) {
+            type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension)
+        }
+        return type
+    }
+
+    private fun callUploadPostApi(sourceFile: File, actualFileName: String) {
+
+        GlobalScope.launch(Dispatchers.IO) {
+            Log.d("Enter upload thread", "Amazing")
+            makeToast("Upload Verifying")
+
+            val cameraMessage  = if (cameraSelector == CameraSelector.DEFAULT_BACK_CAMERA) {
+                "back"
+            } else {
+                "front"
+            }
+
+            val mimeType = getMimeType(sourceFile);
+            if (mimeType == null) {
+                Log.e("file error", "Not able to get mime type")
+                makeToast("File Error")
+                return@launch
+            }
+
+            val fileName = sourceFile.name
+            Log.d("upload post api filename", fileName)
+            Log.d("upload post api mimetype", mimeType)
+
+            val requestBody: RequestBody =
+                MultipartBody.Builder().setType(MultipartBody.FORM)
+                    .addFormDataPart("image", fileName,sourceFile.asRequestBody(mimeType.toMediaTypeOrNull()))
+                    .build()
+
+            val url: HttpUrl = HttpUrl.Builder()
+                .scheme("https")
+                .host(API_HOST)
+                .addPathSegment("uploadtopost")
+                .addPathSegment(actualFileName)
+                .addQueryParameter("camera", cameraMessage)
+                .addQueryParameter("role", role)
+                .build()
+
+            val request = Request.Builder()
+                .url(url)
+                .post(requestBody)
+                .build()
+
+            val failMsg = "Error: API call failed"
+            val unexpectedCode = "Error: No face detected"
+
+            client.newCall(request).execute().use { response ->
+                if (!response.isSuccessful){
+                    Log.d("upload API call failed", response.body!!.string())
+                    makeToast(unexpectedCode)
+                }
+                else {
+                    val responseBody = response.body!!.string()
+                    Log.d("upload API body", responseBody)
+                    makeToast("Upload successful")
+                    val intent = Intent(this@UploadActivity, CameraActivity::class.java)
+                    intent.putExtra("upload apiResponseBody", responseBody)
+                    startActivity(intent)
+                }
+            }
+            turnOnPreview()
+            val resolver = contentResolver
+            val uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+            val selection = MediaStore.MediaColumns.DISPLAY_NAME + " = ?"
+            val selectionArgs = arrayOf(actualFileName)
+            resolver.delete(uri, selection, selectionArgs)
+            Log.d("Deleted", "Deleted $actualFileName from the gallery")
+
+        }
+
     }
 
     private fun turnOnPreview() {

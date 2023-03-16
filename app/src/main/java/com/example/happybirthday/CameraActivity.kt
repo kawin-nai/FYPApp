@@ -114,11 +114,6 @@ class CameraActivity : AppCompatActivity() {
                     it.setSurfaceProvider(viewBinding.viewFinder.surfaceProvider)
                 }
 
-//            val analysisUseCase = ImageAnalysis.Builder()
-//                .build()
-//                .also {
-//                    it.setAnalyzer(cameraExecutor, FaceAnalyzer(lifecycle, overlay))
-//                }
 
             imageCapture = ImageCapture.Builder().setTargetResolution(Size(1200, 1600)).build()
 //            imageCapture = ImageCapture.Builder().build()
@@ -366,7 +361,7 @@ class CameraActivity : AppCompatActivity() {
                 .build()
 
             val failMsg = "Error: API call failed"
-            val unexpectedCode = "Error: Exception while processing input"
+            val unexpectedCode = "Error: No face detected"
 
             client.newCall(request).execute().use { response ->
                 if (!response.isSuccessful){
