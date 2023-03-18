@@ -1,7 +1,6 @@
 package com.example.happybirthday
 
 import android.Manifest
-import android.content.ContentResolver
 import android.content.ContentValues
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -21,21 +20,20 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.happybirthday.databinding.ActivityCameraBinding
-import com.example.happybirthday.faceanalyzer.FaceAnalyzer
 import com.example.happybirthday.faceanalyzer.Overlay
 import com.example.happybirthday.utilclasses.FaceVerificationResponse
-import com.example.happybirthday.utilclasses.UploadUtility
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
 import com.google.gson.Gson
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.asRequestBody
-import okhttp3.internal.wait
+import okhttp3.internal.closeQuietly
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.Executors
@@ -319,6 +317,7 @@ class CameraActivity : AppCompatActivity() {
         return type
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     private fun callVerifyPostApi(sourceFile: File) {
 
         GlobalScope.launch(Dispatchers.IO) {
@@ -363,25 +362,32 @@ class CameraActivity : AppCompatActivity() {
             val failMsg = "Error: API call failed"
             val unexpectedCode = "Error: No face detected"
 
-            client.newCall(request).execute().use { response ->
-                if (!response.isSuccessful){
-                    Log.d("API call failed", response.body!!.string())
-                    makeToast(unexpectedCode)
-                }
-                else {
-                    val responseBody = response.body!!.string()
-                    Log.d("API body", responseBody)
-                    val jsonResponse = gson.fromJson(responseBody, FaceVerificationResponse::class.java)
-                    if (jsonResponse.verified == "True") {
-                        val intent = Intent(this@CameraActivity, SuccessActivity::class.java)
-                        intent.putExtra("apiResponseBody", responseBody)
-                        startActivity(intent)
+            try {
+                client.newCall(request).execute().use { response ->
+                    if (!response.isSuccessful){
+                        Log.d("API call failed", response.body!!.string())
+                        makeToast(unexpectedCode)
                     }
                     else {
-                        makeToast("Face not verified")
+                        val responseBody = response.body!!.string()
+                        response.close()
+                        Log.d("API body", responseBody)
+                        val jsonResponse = gson.fromJson(responseBody, FaceVerificationResponse::class.java)
+                        if (jsonResponse.verified == "True") {
+                            val intent = Intent(this@CameraActivity, SuccessActivity::class.java)
+                            intent.putExtra("apiResponseBody", responseBody)
+                            startActivity(intent)
+                        }
+                        else {
+                            makeToast("Face not verified")
+                        }
                     }
                 }
+            } catch (e: Exception) {
+                Log.e("camera activity: API Call failed", e.message, e)
+                makeToast(failMsg)
             }
+
             turnOnPreview()
             val resolver = contentResolver
             val uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI

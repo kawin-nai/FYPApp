@@ -22,10 +22,10 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.happybirthday.databinding.ActivityUploadBinding
-import com.example.happybirthday.utilclasses.FaceVerificationResponse
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -323,6 +323,7 @@ class UploadActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
         return type
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     private fun callUploadPostApi(sourceFile: File, actualFileName: String) {
 
         GlobalScope.launch(Dispatchers.IO) {
@@ -368,20 +369,26 @@ class UploadActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
             val failMsg = "Error: API call failed"
             val unexpectedCode = "Error: No face detected"
 
-            client.newCall(request).execute().use { response ->
-                if (!response.isSuccessful){
-                    Log.d("upload API call failed", response.body!!.string())
-                    makeToast(unexpectedCode)
+            try {
+                client.newCall(request).execute().use { response ->
+                    if (!response.isSuccessful){
+                        Log.d("upload API call failed", response.body!!.string())
+                        makeToast(unexpectedCode)
+                    }
+                    else {
+                        val responseBody = response.body!!.string()
+                        Log.d("upload API body", responseBody)
+                        makeToast("Upload successful")
+                        val intent = Intent(this@UploadActivity, CameraActivity::class.java)
+                        intent.putExtra("upload apiResponseBody", responseBody)
+                        startActivity(intent)
+                    }
                 }
-                else {
-                    val responseBody = response.body!!.string()
-                    Log.d("upload API body", responseBody)
-                    makeToast("Upload successful")
-                    val intent = Intent(this@UploadActivity, CameraActivity::class.java)
-                    intent.putExtra("upload apiResponseBody", responseBody)
-                    startActivity(intent)
-                }
+            } catch (e: Exception) {
+                Log.e("upload activity Exception", e.message, e)
+                makeToast(failMsg)
             }
+
             turnOnPreview()
             val resolver = contentResolver
             val uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
