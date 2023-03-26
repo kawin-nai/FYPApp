@@ -355,7 +355,8 @@ class UploadActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
             val url: HttpUrl = HttpUrl.Builder()
                 .scheme("https")
                 .host(API_HOST)
-                .addPathSegment("uploadtopost")
+                .addPathSegment("api")
+                .addPathSegment("register")
                 .addPathSegment(actualFileName)
                 .addQueryParameter("camera", cameraMessage)
                 .addQueryParameter("role", role)
@@ -431,7 +432,8 @@ class UploadActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
     companion object {
         private const val TAG = "UploadActivity"
         private const val REQUEST_CODE_PERMISSIONS = 10
-        private const val API_HOST = "gcloud-container-nomount-real-resnet-v2-xpp4wivu4q-de.a.run.app"
+//        private const val API_HOST = "gcloud-container-nomount-real-resnet-v2-xpp4wivu4q-de.a.run.app"
+private const val API_HOST = "gcloud-container-nomount-real-resnet-v3-xpp4wivu4q-de.a.run.app"
         private val REQUIRED_PERMISSIONS =
             mutableListOf (
                 Manifest.permission.CAMERA,

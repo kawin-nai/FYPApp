@@ -350,7 +350,8 @@ class CameraActivity : AppCompatActivity() {
                 .scheme("https")
                 .host(API_HOST)
 //            .host(API_LOCALHOST)
-                .addPathSegment("verifyfrompost")
+                .addPathSegment("api")
+                .addPathSegment("verify")
                 .addQueryParameter("camera", cameraMessage)
                 .build()
 
@@ -431,12 +432,9 @@ class CameraActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "CameraActivity"
         private const val REQUEST_CODE_PERMISSIONS = 10
-//        private const val API_URL = "https://gcloud-container-nomount-real-xpp4wivu4q-de.a.run.app/verifyfromdb"
-//        private const val API_URL = "https://gcloud-container-nomount-real-resnet-xpp4wivu4q-de.a.run.app/verifyfromdb"
-//        private const val API_URL = "https://gcloud-container-nomount-real-resnet-senet-xpp4wivu4q-de.a.run.app/verifyfromdb"
 //        private const val API_HOST = "gcloud-container-nomount-real-resnet-senet-xpp4wivu4q-de.a.run.app"
-        private const val API_HOST = "gcloud-container-nomount-real-resnet-v2-xpp4wivu4q-de.a.run.app"
-        private const val API_LOCALHOST = "172.28.231.132"
+//        private const val API_HOST = "gcloud-container-nomount-real-resnet-v2-xpp4wivu4q-de.a.run.app"
+        private const val API_HOST = "gcloud-container-nomount-real-resnet-v3-xpp4wivu4q-de.a.run.app"
         private val REQUIRED_PERMISSIONS =
             mutableListOf (
                 Manifest.permission.CAMERA,
