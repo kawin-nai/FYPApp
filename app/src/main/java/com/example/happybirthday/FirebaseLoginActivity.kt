@@ -5,12 +5,17 @@ import android.graphics.Camera
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Toast
+import com.example.happybirthday.databinding.ActivityCameraBinding
+import com.example.happybirthday.databinding.ActivityFirebaseLoginBinding
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
 import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.ktx.Firebase
 
 class FirebaseLoginActivity : AppCompatActivity() {
+
+    private lateinit var viewBinding: ActivityFirebaseLoginBinding
 
     private val signInLauncher = registerForActivityResult(
         FirebaseAuthUIActivityResultContract()
@@ -20,8 +25,15 @@ class FirebaseLoginActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_firebase_login)
-        createSignInIntent()
+        viewBinding = ActivityFirebaseLoginBinding.inflate(layoutInflater)
+        setContentView(viewBinding.root)
+        if (FirebaseAuth.getInstance().currentUser != null) {
+            startActivity(Intent(this@FirebaseLoginActivity, CameraActivity::class.java))
+        }
+        
+        viewBinding.signInButton.setOnClickListener {
+            createSignInIntent()
+        }
     }
 
     private fun createSignInIntent() {
