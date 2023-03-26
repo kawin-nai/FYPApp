@@ -315,8 +315,6 @@ class UploadActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
                     }
                     val responseBody = response.body!!.string()
                     Log.d("API body", responseBody)
-                    val intent = Intent(this@UploadActivity, CameraActivity::class.java)
-                    startActivity(intent)
                 }
             }
         })

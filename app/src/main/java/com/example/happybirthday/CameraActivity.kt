@@ -94,10 +94,6 @@ class CameraActivity : AppCompatActivity() {
             }
             startCamera()
         }
-        viewBinding.upload.setOnClickListener {
-            val intent = Intent(this@CameraActivity, UploadActivity::class.java)
-            startActivity(intent)
-        }
     }
 
     private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {

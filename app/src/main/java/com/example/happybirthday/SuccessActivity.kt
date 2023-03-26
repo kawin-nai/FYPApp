@@ -29,10 +29,6 @@ class SuccessActivity : AppCompatActivity() {
         val binding = ActivitySuccessBinding.inflate(layoutInflater)
 
         setContentView(binding.root)
-        binding.backButton.setOnClickListener{
-            val intent = Intent(this, CameraActivity::class.java)
-            startActivity(intent)
-        }
 
         binding.rvRecyclerView.adapter = RecycleAdapter(this, namesList, rolesList, distancesList, imagesList)
         binding.rvRecyclerView.setHasFixedSize(true)
@@ -45,12 +41,6 @@ class SuccessActivity : AppCompatActivity() {
         postToList(jsonResponse.content)
 
         Log.d("JSON Response", jsonResponse.toString())
-//        binding.apiResponse.movementMethod = ScrollingMovementMethod()
-//        binding.apiResponse.text = apiResponseBody
-        binding.uploadButton.setOnClickListener {
-            val intent = Intent(this, UploadActivity::class.java)
-            startActivity(intent)
-        }
     }
 
     private fun addToList(name: String, role: String, distance:String, image: String) {
