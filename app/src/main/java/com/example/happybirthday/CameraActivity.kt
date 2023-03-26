@@ -22,6 +22,7 @@ import androidx.core.content.ContextCompat
 import com.example.happybirthday.databinding.ActivityCameraBinding
 import com.example.happybirthday.faceanalyzer.Overlay
 import com.example.happybirthday.utilclasses.FaceVerificationResponse
+import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
@@ -33,13 +34,11 @@ import kotlinx.coroutines.launch
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.asRequestBody
-import okhttp3.internal.closeQuietly
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-// todo: alternatively, use on-device ML to get embeddings and call the API with the embeddings
 
 class CameraActivity : AppCompatActivity() {
     private lateinit var viewBinding: ActivityCameraBinding
@@ -48,8 +47,8 @@ class CameraActivity : AppCompatActivity() {
     private var imageCapture: ImageCapture? = null
     private var cameraExecutor = Executors.newSingleThreadExecutor()
     private val storage = Firebase.storage
-    private var storageRef = storage.reference
     private val db = Firebase.firestore
+    private var authToken: String? = null
     private lateinit var overlay: Overlay
 
     private val client = OkHttpClient.Builder().connectTimeout(10, TimeUnit.SECONDS)
@@ -74,7 +73,19 @@ class CameraActivity : AppCompatActivity() {
                 this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
         }
 
-        viewBinding.shutterButton.setOnClickListener { takePhoto() }
+        viewBinding.shutterButton.setOnClickListener {
+            val currentUser = Firebase.auth.currentUser
+            currentUser?.getIdToken(true)?.addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    authToken = task.result?.token
+                    makeToast(authToken!!)
+                    Log.d("Auth token", authToken!!)
+                    takePhoto()
+                } else {
+                    makeToast("Unauthenticated")
+                }
+            }
+        }
         // Select back camera as a default
         viewBinding.switchCamera.setOnClickListener {
             if (!allPermissionsGranted())
@@ -357,6 +368,7 @@ class CameraActivity : AppCompatActivity() {
 
             val request = Request.Builder()
                 .url(url)
+                .addHeader("Authorization", authToken!!)
                 .post(requestBody)
                 .build()
 
