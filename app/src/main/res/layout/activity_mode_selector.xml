@@ -30,13 +30,14 @@
 
     <ImageView
         android:id="@+id/logoImgView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@mipmap/ic_new_launcher_foreground" />
+        app:srcCompat="@mipmap/ic_new_launcher_foreground"
+        android:contentDescription="App logo" />
 
     <TextView
         android:id="@+id/logoutText"
