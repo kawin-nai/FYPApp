@@ -22,6 +22,7 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.happybirthday.databinding.ActivityUploadBinding
+import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
@@ -47,10 +48,9 @@ class UploadActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
 
     private var imageCapture: ImageCapture? = null
     private var cameraExecutor: ExecutorService = Executors.newSingleThreadExecutor()
-    private val storage = Firebase.storage
-    private var storageRef = storage.reference
     private val db = Firebase.firestore
     private lateinit var role: String
+    private var authToken: String? = null
 
     private val client = OkHttpClient.Builder().connectTimeout(10, TimeUnit.SECONDS)
         .writeTimeout(10, TimeUnit.SECONDS).readTimeout(10, TimeUnit.SECONDS).build()
@@ -87,7 +87,15 @@ class UploadActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
             if (inputName.isEmpty()) {
                 viewBinding.personName.error = "This field cannot be empty"
             } else {
-                takePhoto()
+                val currentUser = Firebase.auth.currentUser
+                currentUser?.getIdToken(false)?.addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        authToken = task.result?.token
+                        takePhoto()
+                    } else {
+                        makeToast("Unauthenticated")
+                    }
+                }
             }
         }
         val spinner: Spinner = findViewById(R.id.spinner)
@@ -364,6 +372,7 @@ class UploadActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
 
             val request = Request.Builder()
                 .url(url)
+                .addHeader("Authorization", authToken!!)
                 .post(requestBody)
                 .build()
 

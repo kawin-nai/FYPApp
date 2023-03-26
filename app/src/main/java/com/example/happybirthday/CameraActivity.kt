@@ -46,7 +46,6 @@ class CameraActivity : AppCompatActivity() {
 
     private var imageCapture: ImageCapture? = null
     private var cameraExecutor = Executors.newSingleThreadExecutor()
-    private val storage = Firebase.storage
     private val db = Firebase.firestore
     private var authToken: String? = null
     private lateinit var overlay: Overlay
@@ -58,7 +57,6 @@ class CameraActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         viewBinding = ActivityCameraBinding.inflate(layoutInflater)
         setContentView(viewBinding.root)
-//        cameraExecutor = Executors.newSingleThreadExecutor()
         overlay = Overlay(this)
         val layoutOverlay = ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
@@ -75,11 +73,9 @@ class CameraActivity : AppCompatActivity() {
 
         viewBinding.shutterButton.setOnClickListener {
             val currentUser = Firebase.auth.currentUser
-            currentUser?.getIdToken(true)?.addOnCompleteListener { task ->
+            currentUser?.getIdToken(false)?.addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     authToken = task.result?.token
-                    makeToast(authToken!!)
-                    Log.d("Auth token", authToken!!)
                     takePhoto()
                 } else {
                     makeToast("Unauthenticated")
@@ -360,7 +356,6 @@ class CameraActivity : AppCompatActivity() {
             val url: HttpUrl = HttpUrl.Builder()
                 .scheme("https")
                 .host(API_HOST)
-//            .host(API_LOCALHOST)
                 .addPathSegment("api")
                 .addPathSegment("verify")
                 .addQueryParameter("camera", cameraMessage)
